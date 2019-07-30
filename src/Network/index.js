@@ -51,7 +51,7 @@ class Network {
 		return output;
 	}
 
-	train(data) {
+	train(data, logFlag) {
 		let deltas = [];
 		let results = [];
 		for (const example of data) {
@@ -64,7 +64,10 @@ class Network {
 			let errors = [];
 			let outputErrors = [];
 			for (let i = 0; i < outputs.length; ++i) {
-				outputErrors.push(example.outputs[i] - outputs[i]);
+				outputErrors.push(
+					-(example.outputs[i] - outputs[i]) *
+						(outputs[i] * (1 - outputs[i]))
+				);
 				// outputErrors.push(0.5 * (example.outputs[i] - outputs[i]) ** 2);
 			}
 			errors.push(outputErrors);
@@ -91,12 +94,15 @@ class Network {
 					for (const connection of node.Connections) {
 						// loop through last hidden layer's errors
 						for (let i = 0; i < lastHiddenErrorsRow.length; ++i) {
-							errorSum +=
-								lastHiddenErrorsRow[i] *
-								(connection.weight / totalWeight);
 							// errorSum +=
-							// 	lastHiddenErrorsRow[i] * connection.weight;
+							// 	lastHiddenErrorsRow[i] *
+							// 	(connection.weight / totalWeight);
+							errorSum +=
+								lastHiddenErrorsRow[i] * connection.weight;
 						}
+						errorSum +=
+							connection.inputNode.value *
+							(1 - connection.inputNode.value);
 					}
 
 					hiddenErrorsRow.push(errorSum);
@@ -106,7 +112,7 @@ class Network {
 			}
 
 			errors.reverse();
-			// log(errors);
+			log(errors);
 
 			let exampleDeltas = [];
 			for (let i = 1; i < this.Layers.length; ++i) {
@@ -121,18 +127,35 @@ class Network {
 					for (const connection of node.Connections) {
 						++x;
 
-						connection.weight +=
+						const delta =
 							this.learningRate *
 							errors[i - 1][j] *
-							// sigmoid(
-							// 	connection.inputNode.value * connection.weight
-							// ) *
-							// (1 -
-							// 	sigmoid(
-							// 		connection.inputNode.value *
-							// 			connection.weight
-							// 	)) *
 							connection.inputNode.value;
+
+						nodeDeltas.push(delta);
+
+						const deltaNeg = delta < 0;
+						let logflag = false;
+						if (deltaNeg && example.outputs[0] > outputs[0]) {
+							log('\nwrong direction: positive');
+							logflag = true;
+						}
+						if (!deltaNeg && example.outputs[0] < outputs[0]) {
+							logflag = true;
+							log('\nwrong direction: negative');
+						}
+						if (logflag) {
+							log('delta');
+							log(delta);
+							log('this.learningRate');
+							log(this.learningRate);
+							log('errors[i-1][j]');
+							log(errors[i - 1][j]);
+							log('connection.inputNode.value');
+							log(connection.inputNode.value);
+						}
+
+						// connection.weight += delta;
 					}
 
 					layerDeltas.push(nodeDeltas);
@@ -142,56 +165,56 @@ class Network {
 			}
 			deltas.push(exampleDeltas);
 
-			// log('exampleDeltas');
-			// log(exampleDeltas);
+			log('exampleDeltas');
+			log(exampleDeltas);
 
-			// log('network outputs');
-			// log(outputs);
+			log('network outputs');
+			log(outputs);
 
-			// log('desired outputs');
-			// log(example.outputs);
-			// log('\n\n');
+			log('desired outputs');
+			log(example.outputs);
+			log('\n\n');
 
 			results.push({ guess: outputs, answer: example.outputs });
 		}
-		for (let i = 0; i < deltas.length; ++i) {
-			// log('deltas');
-			// log(i, deltas[i]);
-			// log('...for results ', results[i]);
-		}
-
-		// for (let i = 1; i < this.Layers.length; ++i) {
-		// 	const layer = this.Layers[i];
-
-		// 	for (let j = 0; j < layer.Nodes.length; ++j) {
-		// 		const node = layer.Nodes[j];
-
-		// 		for (let k = 0; k < node.Connections.length; ++k) {
-		// 			const connection = node.Connections[k];
-
-		// 			let sum = 0;
-		// 			for (let l = 0; l < data.length; ++l) {
-		// 				sum += deltas[l][i - 1][j][k];
-		// 			}
-		// 			// log(
-		// 			// 	`\nadjustments for layer${i} node${j} connection${k}`
-		// 			// );
-		// 			// log('pre connection.weight');
-		// 			// log(connection.weight);
-		// 			// log('sum / data.length');
-		// 			// log(sum / data.length);
-
-		// 			connection.weight += sum / data.length;
-		// 			// log('post connection.weight');
-		// 			// log(connection.weight);
-		// 		}
-		// 	}
+		// for (let i = 0; i < deltas.length; ++i) {
+		// log('deltas');
+		// log(i, deltas[i]);
+		// log('...for results ', results[i]);
 		// }
+
+		for (let i = 1; i < this.Layers.length; ++i) {
+			const layer = this.Layers[i];
+
+			for (let j = 0; j < layer.Nodes.length; ++j) {
+				const node = layer.Nodes[j];
+
+				for (let k = 0; k < node.Connections.length; ++k) {
+					const connection = node.Connections[k];
+
+					let sum = 0;
+					for (let l = 0; l < data.length; ++l) {
+						sum += deltas[l][i - 1][j][k];
+					}
+					// log(
+					// 	`\nadjustments for layer${i} node${j} connection${k}`
+					// );
+					// log('pre connection.weight');
+					// log(connection.weight);
+					// log('sum / data.length');
+					// log(sum / data.length);
+
+					connection.weight += sum / data.length;
+					// log('post connection.weight');
+					// log(connection.weight);
+				}
+			}
+		}
 	}
 }
 
 function log(...s) {
-	console.log(...s);
+	// console.log(...s);
 }
 
 function sigmoid(x) {

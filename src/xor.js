@@ -2,7 +2,7 @@ const Network = require('./Network');
 
 module.exports = () => {
 	const network = new Network({
-		learningRate: 2,
+		learningRate: 10,
 		layers: [
 			{
 				numNodes: 2
@@ -32,33 +32,203 @@ module.exports = () => {
 		{
 			inputs: [1, 1],
 			outputs: [0]
+		},
+		{
+			inputs: [0, 0],
+			outputs: [0]
+		},
+		{
+			inputs: [0, 1],
+			outputs: [1]
+		},
+		{
+			inputs: [1, 0],
+			outputs: [1]
+		},
+		{
+			inputs: [1, 1],
+			outputs: [0]
+		},
+		{
+			inputs: [0, 0],
+			outputs: [0]
+		},
+		{
+			inputs: [0, 1],
+			outputs: [1]
+		},
+		{
+			inputs: [1, 0],
+			outputs: [1]
+		},
+		{
+			inputs: [1, 1],
+			outputs: [0]
+		},
+		{
+			inputs: [0, 0],
+			outputs: [0]
+		},
+		{
+			inputs: [0, 1],
+			outputs: [1]
+		},
+		{
+			inputs: [1, 0],
+			outputs: [1]
+		},
+		{
+			inputs: [1, 1],
+			outputs: [0]
+		},
+		{
+			inputs: [0, 0],
+			outputs: [0]
+		},
+		{
+			inputs: [0, 1],
+			outputs: [1]
+		},
+		{
+			inputs: [1, 0],
+			outputs: [1]
+		},
+		{
+			inputs: [1, 1],
+			outputs: [0]
+		},
+		{
+			inputs: [0, 0],
+			outputs: [0]
+		},
+		{
+			inputs: [0, 1],
+			outputs: [1]
+		},
+		{
+			inputs: [1, 0],
+			outputs: [1]
+		},
+		{
+			inputs: [1, 1],
+			outputs: [0]
+		},
+		{
+			inputs: [0, 0],
+			outputs: [0]
+		},
+		{
+			inputs: [0, 1],
+			outputs: [1]
+		},
+		{
+			inputs: [1, 0],
+			outputs: [1]
+		},
+		{
+			inputs: [1, 1],
+			outputs: [0]
+		},
+		{
+			inputs: [0, 0],
+			outputs: [0]
+		},
+		{
+			inputs: [0, 1],
+			outputs: [1]
+		},
+		{
+			inputs: [1, 0],
+			outputs: [1]
+		},
+		{
+			inputs: [1, 1],
+			outputs: [0]
+		},
+		{
+			inputs: [0, 0],
+			outputs: [0]
+		},
+		{
+			inputs: [0, 1],
+			outputs: [1]
+		},
+		{
+			inputs: [1, 0],
+			outputs: [1]
+		},
+		{
+			inputs: [1, 1],
+			outputs: [0]
+		},
+		{
+			inputs: [0, 0],
+			outputs: [0]
+		},
+		{
+			inputs: [0, 1],
+			outputs: [1]
+		},
+		{
+			inputs: [1, 0],
+			outputs: [1]
+		},
+		{
+			inputs: [1, 1],
+			outputs: [0]
+		},
+		{
+			inputs: [0, 0],
+			outputs: [0]
+		},
+		{
+			inputs: [0, 1],
+			outputs: [1]
+		},
+		{
+			inputs: [1, 0],
+			outputs: [1]
+		},
+		{
+			inputs: [1, 1],
+			outputs: [0]
 		}
 	];
 
-	for (let i = 0; i < 3000000; ++i) {
-		// for (let i = 0; i < 1; ++i) {
-		network.train(shuffle(trainingData));
-	}
-
 	network.setInputs([0, 0]);
 	network.calculate();
-	let outputs = network.getOutputs();
-	console.log(outputs);
+	let zeroOutputs = network.getOutputs();
+	console.log(zeroOutputs);
+	console.log('=========');
 
-	network.setInputs([0, 1]);
-	network.calculate();
-	outputs = network.getOutputs();
-	console.log(outputs);
+	for (let j = 0; j < 300; ++j) {
+		for (let i = 0; i < 10000; ++i) {
+			// for (let i = 0; i < 1; ++i) {
+			network.train(trainingData);
+			// network.train(shuffle(trainingData), i == 299999);
+		}
 
-	network.setInputs([1, 0]);
-	network.calculate();
-	outputs = network.getOutputs();
-	console.log(outputs);
+		network.setInputs([0, 0]);
+		network.calculate();
+		let outputs = network.getOutputs();
+		console.log(outputs);
 
-	network.setInputs([1, 1]);
-	network.calculate();
-	outputs = network.getOutputs();
-	console.log(outputs);
+		network.setInputs([0, 1]);
+		network.calculate();
+		outputs = network.getOutputs();
+		console.log(outputs);
+
+		network.setInputs([1, 0]);
+		network.calculate();
+		outputs = network.getOutputs();
+		console.log(outputs);
+
+		network.setInputs([1, 1]);
+		network.calculate();
+		outputs = network.getOutputs();
+		console.log(outputs);
+		console.log('\n');
+	}
 };
 
 function shuffle(array) {
