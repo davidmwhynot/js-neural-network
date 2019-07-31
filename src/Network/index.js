@@ -1,4 +1,5 @@
 const Layer = require('./Layer');
+const Matrix = require('./Matrix');
 
 class Network {
 	constructor({ layers, learningRate }) {
@@ -112,7 +113,7 @@ class Network {
 			}
 
 			errors.reverse();
-			log(errors);
+			log1(errors);
 
 			let exampleDeltas = [];
 			for (let i = 1; i < this.Layers.length; ++i) {
@@ -137,22 +138,22 @@ class Network {
 						const deltaNeg = delta < 0;
 						let logflag = false;
 						if (deltaNeg && example.outputs[0] > outputs[0]) {
-							log('\nwrong direction: positive');
+							log1('\nwrong direction: positive');
 							logflag = true;
 						}
 						if (!deltaNeg && example.outputs[0] < outputs[0]) {
 							logflag = true;
-							log('\nwrong direction: negative');
+							log1('\nwrong direction: negative');
 						}
 						if (logflag) {
-							log('delta');
-							log(delta);
-							log('this.learningRate');
-							log(this.learningRate);
-							log('errors[i-1][j]');
-							log(errors[i - 1][j]);
-							log('connection.inputNode.value');
-							log(connection.inputNode.value);
+							log1('delta');
+							log1(delta);
+							log1('this.learningRate');
+							log1(this.learningRate);
+							log1('errors[i-1][j]');
+							log1(errors[i - 1][j]);
+							log1('connection.inputNode.value');
+							log1(connection.inputNode.value);
 						}
 
 						// connection.weight += delta;
@@ -165,22 +166,22 @@ class Network {
 			}
 			deltas.push(exampleDeltas);
 
-			log('exampleDeltas');
-			log(exampleDeltas);
+			log1('exampleDeltas');
+			log1(exampleDeltas);
 
-			log('network outputs');
-			log(outputs);
+			log1('network outputs');
+			log1(outputs);
 
-			log('desired outputs');
-			log(example.outputs);
-			log('\n\n');
+			log1('desired outputs');
+			log1(example.outputs);
+			log1('\n\n');
 
 			results.push({ guess: outputs, answer: example.outputs });
 		}
 		// for (let i = 0; i < deltas.length; ++i) {
-		// log('deltas');
-		// log(i, deltas[i]);
-		// log('...for results ', results[i]);
+		// log1('deltas');
+		// log1(i, deltas[i]);
+		// log1('...for results ', results[i]);
 		// }
 
 		for (let i = 1; i < this.Layers.length; ++i) {
@@ -196,24 +197,138 @@ class Network {
 					for (let l = 0; l < data.length; ++l) {
 						sum += deltas[l][i - 1][j][k];
 					}
-					// log(
+					// log1(
 					// 	`\nadjustments for layer${i} node${j} connection${k}`
 					// );
-					// log('pre connection.weight');
-					// log(connection.weight);
-					// log('sum / data.length');
-					// log(sum / data.length);
+					// log1('pre connection.weight');
+					// log1(connection.weight);
+					// log1('sum / data.length');
+					// log1(sum / data.length);
 
 					connection.weight += sum / data.length;
-					// log('post connection.weight');
-					// log(connection.weight);
+					// log1('post connection.weight');
+					// log1(connection.weight);
 				}
+			}
+		}
+	}
+
+	// -(y-yHat) == yHat - y
+	// -(4 - 2) == 2 - 4
+	// 2 - 4 == -2
+
+	train3(data, logFlag) {
+		const log = (...s) => {
+			logFlag ? console.log(...s) : '';
+		};
+
+		const dJdW1s = [];
+		const dJdW2s = [];
+
+		for (const example of data) {
+			this.setInputs(example.inputs);
+			this.calculate();
+
+			const yHat = Matrix.fromArray(this.getOutputs());
+			const y = Matrix.fromArray(example.outputs);
+			const yHatMinusy = Matrix.subtract(yHat, y);
+
+			const layer3nodeVals = this.Layers[2].Nodes.map(n => n.value);
+			const z3 = Matrix.fromArray(layer3nodeVals);
+			z3.map(sigmoidPrime);
+
+			const delta3 = Matrix.multiply(yHatMinusy, z3);
+			log('delta3', delta3);
+
+			const layer2nodeVals = this.Layers[1].Nodes.map(n => n.value);
+			const a2 = Matrix.fromArray(layer2nodeVals);
+
+			const dJdW2 = Matrix.multiply(a2, delta3);
+
+			log('dJdW2', dJdW2);
+			log('\n\n');
+
+			dJdW2s.push(dJdW2.data);
+
+			const w2array = this.Layers[1].Nodes.map(n =>
+				n.Connections.map(c => c.weight)
+			);
+
+			const w2 = new Matrix(w2array.length, w2array[0].length);
+
+			for (let i = 0; i < w2array.length; ++i) {
+				for (let j = 0; j < w2array[i].length; ++j) {
+					w2.data[i][j] = w2array[i][j];
+				}
+			}
+			log('w2', w2);
+
+			w2.multiply(delta3.data[0][0]);
+			log('w2 multiplied', w2);
+
+			const z2 = Matrix.fromArray(layer2nodeVals);
+			z2.map(sigmoidPrime);
+
+			const delta2 = Matrix.multiply(w2, z2);
+			log('delta2', delta2);
+
+			const X = Matrix.fromArray(example.inputs);
+			log('X', X);
+
+			const XTranspose = Matrix.transpose(X);
+			log('XTranspose', XTranspose);
+
+			const dJdW1 = Matrix.multiply(delta2, XTranspose);
+			log('dJdW1', dJdW1);
+
+			dJdW1s.push(dJdW1.data);
+
+			log('\n\n');
+			log('example.inputs', example.inputs);
+			log('example.outputs', example.outputs);
+			log('outputs', this.getOutputs());
+			log('\n\n');
+			log('\n\n');
+		}
+		log('dJdW1s');
+		console.table(dJdW1s);
+		log('dJdW2s');
+		console.table(dJdW2s);
+		log('\n\n');
+
+		for (let i = 0; i < this.Layers[2].Nodes.length; ++i) {
+			const node = this.Layers[2].Nodes[i];
+
+			for (let j = 0; j < node.Connections.length; ++j) {
+				const connection = node.Connections[j];
+
+				let sum = 0;
+				for (let k = 0; k < data.length; ++k) {
+					sum += dJdW2s[k][j];
+				}
+
+				connection.weight -= this.learningRate * sum;
+			}
+		}
+
+		for (let i = 0; i < this.Layers[1].Nodes.length; ++i) {
+			const node = this.Layers[1].Nodes[i];
+
+			for (let j = 0; j < node.Connections.length; ++j) {
+				const connection = node.Connections[j];
+
+				let sum = 0;
+				for (let k = 0; k < data.length; ++k) {
+					sum += dJdW2s[k][i][j];
+				}
+
+				connection.weight -= this.learningRate * sum;
 			}
 		}
 	}
 }
 
-function log(...s) {
+function log1(...s) {
 	// console.log(...s);
 }
 
@@ -222,8 +337,12 @@ function sigmoid(x) {
 }
 
 function sigmoidPrime(x) {
-	return sigmoid(x) * (1 - sigmoid(x));
+	return x * (1 - x);
 }
+
+// function sigmoidPrime(x) {
+// 	return sigmoid(x) * (1 - sigmoid(x));
+// }
 
 module.exports = Network;
 
@@ -320,12 +439,12 @@ nodeDeltas.push(
 			)) *
 		connection.inputNode.value
 );
-log(
+log1(
 	`\nweight adjustment for layer${i} node${j} connection${x}:`
 );
-log('connection.weight', connection.weight);
-log('errors[i - 1][j]', errors[i - 1][j]);
-log('connection.weight', connection.weight);
+log1('connection.weight', connection.weight);
+log1('errors[i - 1][j]', errors[i - 1][j]);
+log1('connection.weight', connection.weight);
 
 nodeDeltas.push(
 	this.learningRate *

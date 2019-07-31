@@ -32,166 +32,6 @@ module.exports = () => {
 		{
 			inputs: [1, 1],
 			outputs: [0]
-		},
-		{
-			inputs: [0, 0],
-			outputs: [0]
-		},
-		{
-			inputs: [0, 1],
-			outputs: [1]
-		},
-		{
-			inputs: [1, 0],
-			outputs: [1]
-		},
-		{
-			inputs: [1, 1],
-			outputs: [0]
-		},
-		{
-			inputs: [0, 0],
-			outputs: [0]
-		},
-		{
-			inputs: [0, 1],
-			outputs: [1]
-		},
-		{
-			inputs: [1, 0],
-			outputs: [1]
-		},
-		{
-			inputs: [1, 1],
-			outputs: [0]
-		},
-		{
-			inputs: [0, 0],
-			outputs: [0]
-		},
-		{
-			inputs: [0, 1],
-			outputs: [1]
-		},
-		{
-			inputs: [1, 0],
-			outputs: [1]
-		},
-		{
-			inputs: [1, 1],
-			outputs: [0]
-		},
-		{
-			inputs: [0, 0],
-			outputs: [0]
-		},
-		{
-			inputs: [0, 1],
-			outputs: [1]
-		},
-		{
-			inputs: [1, 0],
-			outputs: [1]
-		},
-		{
-			inputs: [1, 1],
-			outputs: [0]
-		},
-		{
-			inputs: [0, 0],
-			outputs: [0]
-		},
-		{
-			inputs: [0, 1],
-			outputs: [1]
-		},
-		{
-			inputs: [1, 0],
-			outputs: [1]
-		},
-		{
-			inputs: [1, 1],
-			outputs: [0]
-		},
-		{
-			inputs: [0, 0],
-			outputs: [0]
-		},
-		{
-			inputs: [0, 1],
-			outputs: [1]
-		},
-		{
-			inputs: [1, 0],
-			outputs: [1]
-		},
-		{
-			inputs: [1, 1],
-			outputs: [0]
-		},
-		{
-			inputs: [0, 0],
-			outputs: [0]
-		},
-		{
-			inputs: [0, 1],
-			outputs: [1]
-		},
-		{
-			inputs: [1, 0],
-			outputs: [1]
-		},
-		{
-			inputs: [1, 1],
-			outputs: [0]
-		},
-		{
-			inputs: [0, 0],
-			outputs: [0]
-		},
-		{
-			inputs: [0, 1],
-			outputs: [1]
-		},
-		{
-			inputs: [1, 0],
-			outputs: [1]
-		},
-		{
-			inputs: [1, 1],
-			outputs: [0]
-		},
-		{
-			inputs: [0, 0],
-			outputs: [0]
-		},
-		{
-			inputs: [0, 1],
-			outputs: [1]
-		},
-		{
-			inputs: [1, 0],
-			outputs: [1]
-		},
-		{
-			inputs: [1, 1],
-			outputs: [0]
-		},
-		{
-			inputs: [0, 0],
-			outputs: [0]
-		},
-		{
-			inputs: [0, 1],
-			outputs: [1]
-		},
-		{
-			inputs: [1, 0],
-			outputs: [1]
-		},
-		{
-			inputs: [1, 1],
-			outputs: [0]
 		}
 	];
 
@@ -201,10 +41,11 @@ module.exports = () => {
 	console.log(zeroOutputs);
 	console.log('=========');
 
-	for (let j = 0; j < 300; ++j) {
-		for (let i = 0; i < 10000; ++i) {
+	for (let j = 0; j < 1; ++j) {
+		for (let i = 0; i < 1; ++i) {
 			// for (let i = 0; i < 1; ++i) {
-			network.train(trainingData);
+			network.train3(trainingData, true);
+			// network.train(trainingData);
 			// network.train(shuffle(trainingData), i == 299999);
 		}
 
