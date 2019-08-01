@@ -13,6 +13,36 @@ class Network {
 		this.connectLayers();
 	}
 
+	inspect() {
+		const inspect = [];
+		for (let i = 0; i < this.Layers.length; ++i) {
+			const layer = this.Layers[i];
+
+			for (let j = 0; j < layer.Nodes.length; ++j) {
+				const node = layer.Nodes[j];
+
+				const inspectNode = {
+					layer: i,
+					node: j,
+					val: node.value,
+					connections: []
+				};
+
+				for (let k = 0; k < node.Connections.length; ++k) {
+					const connection = node.Connections[k];
+
+					inspectNode.connections.push({
+						num: k,
+						weight: connection.weight,
+						inputVal: connection.inputNode.value
+					});
+				}
+				inspect.push(inspectNode);
+			}
+		}
+		return inspect;
+	}
+
 	print() {
 		for (const layer of this.Layers) {
 			let output = '';
@@ -221,6 +251,9 @@ class Network {
 		const log = (...s) => {
 			logFlag ? console.log(...s) : '';
 		};
+		const table = x => {
+			logFlag ? console.table(x) : '';
+		};
 
 		const dJdW1s = [];
 		const dJdW2s = [];
@@ -264,12 +297,13 @@ class Network {
 			log('w2', w2);
 
 			w2.multiply(delta3.data[0][0]);
+			const w2Transpose = Matrix.transpose(w2);
 			log('w2 multiplied', w2);
 
 			const z2 = Matrix.fromArray(layer2nodeVals);
 			z2.map(sigmoidPrime);
 
-			const delta2 = Matrix.multiply(w2, z2);
+			const delta2 = Matrix.multiply(w2Transpose, z2);
 			log('delta2', delta2);
 
 			const X = Matrix.fromArray(example.inputs);
@@ -291,10 +325,15 @@ class Network {
 			log('\n\n');
 		}
 		log('dJdW1s');
-		console.table(dJdW1s);
+		table(dJdW1s);
 		log('dJdW2s');
-		console.table(dJdW2s);
+		table(dJdW2s);
 		log('\n\n');
+
+		// let nodes = this.inspect();
+		// for (const node of nodes) {
+		// 	console.log(node);
+		// }
 
 		for (let i = 0; i < this.Layers[2].Nodes.length; ++i) {
 			const node = this.Layers[2].Nodes[i];
@@ -304,10 +343,14 @@ class Network {
 
 				let sum = 0;
 				for (let k = 0; k < data.length; ++k) {
-					sum += dJdW2s[k][j];
+					log('dJdW2s[k][j]', dJdW2s[k][j]);
+					sum += Number(dJdW2s[k][j]);
+					log('sum', sum);
 				}
+				log('adjustment', this.learningRate * sum);
 
 				connection.weight -= this.learningRate * sum;
+				log('\n\n');
 			}
 		}
 
@@ -319,12 +362,21 @@ class Network {
 
 				let sum = 0;
 				for (let k = 0; k < data.length; ++k) {
-					sum += dJdW2s[k][i][j];
+					log('dJdW1s[k][i][j]', dJdW1s[k][i][j]);
+					sum += dJdW1s[k][i][j];
+					log('sum', sum);
 				}
+				log('adjustment', this.learningRate * sum);
 
 				connection.weight -= this.learningRate * sum;
+				log('\n\n');
 			}
 		}
+
+		// nodes = this.inspect();
+		// for (const node of nodes) {
+		// 	console.log(node);
+		// }
 	}
 }
 

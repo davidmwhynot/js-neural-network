@@ -2,7 +2,7 @@ const Network = require('./Network');
 
 module.exports = () => {
 	const network = new Network({
-		learningRate: 10,
+		learningRate: 3,
 		layers: [
 			{
 				numNodes: 2
@@ -32,6 +32,54 @@ module.exports = () => {
 		{
 			inputs: [1, 1],
 			outputs: [0]
+		},
+		{
+			inputs: [0, 0],
+			outputs: [0]
+		},
+		{
+			inputs: [0, 1],
+			outputs: [1]
+		},
+		{
+			inputs: [1, 0],
+			outputs: [1]
+		},
+		{
+			inputs: [1, 1],
+			outputs: [0]
+		},
+		{
+			inputs: [0, 0],
+			outputs: [0]
+		},
+		{
+			inputs: [0, 1],
+			outputs: [1]
+		},
+		{
+			inputs: [1, 0],
+			outputs: [1]
+		},
+		{
+			inputs: [1, 1],
+			outputs: [0]
+		},
+		{
+			inputs: [0, 0],
+			outputs: [0]
+		},
+		{
+			inputs: [0, 1],
+			outputs: [1]
+		},
+		{
+			inputs: [1, 0],
+			outputs: [1]
+		},
+		{
+			inputs: [1, 1],
+			outputs: [0]
 		}
 	];
 
@@ -41,10 +89,11 @@ module.exports = () => {
 	console.log(zeroOutputs);
 	console.log('=========');
 
-	for (let j = 0; j < 1; ++j) {
-		for (let i = 0; i < 1; ++i) {
-			// for (let i = 0; i < 1; ++i) {
-			network.train3(trainingData, true);
+	for (let j = 0; j < 5; ++j) {
+		for (let i = 0; i < 50000; ++i) {
+			network.train3(shuffle(trainingData), false);
+			// network.train3(shuffle(trainingData), true);
+			// network.train3(trainingData, true);
 			// network.train(trainingData);
 			// network.train(shuffle(trainingData), i == 299999);
 		}

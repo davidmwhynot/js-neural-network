@@ -79,6 +79,8 @@ class Matrix {
 		// Matrix product
 		if (a.cols !== b.rows) {
 			console.log('Columns of A must match rows of B.');
+			console.log('a', a);
+			console.log('b', b);
 			return undefined;
 		}
 		let result = new Matrix(a.rows, b.cols);
