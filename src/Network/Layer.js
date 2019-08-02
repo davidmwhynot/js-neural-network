@@ -1,11 +1,11 @@
 const Node = require('./Node');
 
 class Layer {
-	constructor(numNodes) {
+	constructor(numNodes, output) {
 		this.Nodes = [];
 
 		for (let i = 0; i < numNodes; ++i) {
-			this.Nodes.push(new Node());
+			this.Nodes.push(new Node(output));
 		}
 	}
 

@@ -1,9 +1,10 @@
 const Connection = require('./Connection');
 
 class Node {
-	constructor() {
-		this.value = 1;
+	constructor(output) {
+		this.value = Math.random();
 		this.Connections = [];
+		this.output = output;
 	}
 
 	connect(inputLayer) {
@@ -24,8 +25,11 @@ class Node {
 		for (const connection of this.Connections) {
 			rawSum += connection.calculate();
 		}
-
-		this.value = this.sigmoid(rawSum);
+		if (!this.output) {
+			this.value = this.sigmoid(rawSum);
+		} else {
+			this.value = rawSum;
+		}
 	}
 
 	sigmoid(input) {
