@@ -2,7 +2,7 @@ const Connection = require('./Connection');
 
 class Node {
 	constructor() {
-		this.value = 1;
+		this.value = Math.random() / 4 - 0.125;
 		this.Connections = [];
 	}
 
@@ -12,7 +12,7 @@ class Node {
 				new Connection({
 					inputNode: node,
 					// weight: 1
-					weight: Math.random() * 10
+					weight: Math.random() / 4 - 0.125
 				})
 			);
 		}

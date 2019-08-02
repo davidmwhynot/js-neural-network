@@ -2,13 +2,13 @@ const Network = require('./Network');
 
 module.exports = () => {
 	const network = new Network({
-		learningRate: 3,
+		learningRate: 0.1,
 		layers: [
 			{
 				numNodes: 2
 			},
 			{
-				numNodes: 2
+				numNodes: 256
 			},
 			{
 				numNodes: 1
@@ -89,9 +89,11 @@ module.exports = () => {
 	console.log(zeroOutputs);
 	console.log('=========');
 
-	for (let j = 0; j < 5; ++j) {
-		for (let i = 0; i < 50000; ++i) {
-			network.train3(shuffle(trainingData), false);
+	for (let j = 0; j < 100; ++j) {
+		for (let i = 0; i < 10000; ++i) {
+			// for (let j = 0; j < 1; ++j) {
+			// 	for (let i = 0; i < 1; ++i) {
+			network.train4(shuffle(trainingData), 4, false, false);
 			// network.train3(shuffle(trainingData), true);
 			// network.train3(trainingData, true);
 			// network.train(trainingData);

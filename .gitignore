@@ -2,3 +2,5 @@ node_modules
 test.json
 train.json
 .vscode
+output.*.log
+output.log

@@ -96,8 +96,7 @@ class Network {
 			let outputErrors = [];
 			for (let i = 0; i < outputs.length; ++i) {
 				outputErrors.push(
-					-(example.outputs[i] - outputs[i]) *
-						(outputs[i] * (1 - outputs[i]))
+					-(example.outputs[i] - outputs[i]) * (outputs[i] * (1 - outputs[i]))
 				);
 				// outputErrors.push(0.5 * (example.outputs[i] - outputs[i]) ** 2);
 			}
@@ -128,12 +127,10 @@ class Network {
 							// errorSum +=
 							// 	lastHiddenErrorsRow[i] *
 							// 	(connection.weight / totalWeight);
-							errorSum +=
-								lastHiddenErrorsRow[i] * connection.weight;
+							errorSum += lastHiddenErrorsRow[i] * connection.weight;
 						}
 						errorSum +=
-							connection.inputNode.value *
-							(1 - connection.inputNode.value);
+							connection.inputNode.value * (1 - connection.inputNode.value);
 					}
 
 					hiddenErrorsRow.push(errorSum);
@@ -159,9 +156,7 @@ class Network {
 						++x;
 
 						const delta =
-							this.learningRate *
-							errors[i - 1][j] *
-							connection.inputNode.value;
+							this.learningRate * errors[i - 1][j] * connection.inputNode.value;
 
 						nodeDeltas.push(delta);
 
@@ -377,6 +372,204 @@ class Network {
 		// for (const node of nodes) {
 		// 	console.log(node);
 		// }
+	}
+
+	train4(data, chunkSize, timeLogFlag, logFlag) {
+		const log = (...s) => {
+			logFlag ? console.log(...s) : '';
+		};
+		const table = (s, x) => {
+			if (logFlag) {
+				console.log(s);
+				console.table(x);
+			}
+		};
+
+		for (let chunk = 0; chunk < chunkSize; ++chunk) {
+			if (timeLogFlag) {
+				console.time('chunk');
+			}
+
+			const examples = [];
+
+			for (
+				let i = chunkSize * chunk;
+				i < chunkSize + chunkSize * chunk &&
+				chunkSize + chunkSize * chunk < data.length;
+				++i
+			) {
+				examples.push(data[i]);
+			}
+
+			if (examples[0]) {
+				// if (false) {
+				const hiddenDeltas = [];
+				const outputDeltas = [];
+
+				for (const example of examples) {
+					this.setInputs(example.inputs);
+					this.calculate();
+
+					// let nodes = this.inspect();
+					// for (const node of nodes) {
+					// 	log(node);
+					// }
+					// log('\n\n');
+
+					// back prop
+					let inputs = Matrix.fromArray(example.inputs);
+					// NOTE: might need to transpose the hidden layer
+					let hidden = Matrix.fromArray(this.Layers[1].getNodeVals());
+
+					let outputs = Matrix.fromArray(this.getOutputs());
+					let targets = Matrix.fromArray(example.outputs);
+
+					// calculate the error
+					// ERROR = TARGETS - OUTPUTS
+					let output_errors = Matrix.subtract(targets, outputs);
+
+					// Calculate gradient
+					let gradients = Matrix.map(outputs, sigmoidPrime);
+					gradients.multiply(output_errors);
+					gradients.multiply(this.learningRate);
+
+					// Calculate deltas
+					let hidden_T = Matrix.transpose(hidden);
+					let weight_ho_deltas = Matrix.multiply(gradients, hidden_T);
+					// log('hidden_T', hidden_T);
+					// log('weight_ho_deltas', weight_ho_deltas);
+
+					// Adjust the weights by deltas
+					let exampleOutputDeltas = [];
+					for (let i = 0; i < this.Layers[2].Nodes.length; ++i) {
+						const node = this.Layers[2].Nodes[i];
+
+						const nodeDeltas = [];
+						for (let j = 0; j < node.Connections.length; ++j) {
+							// const connection = node.Connections[j];
+
+							// connection.weight += weight_ho_deltas.data[i][j];
+							nodeDeltas.push(weight_ho_deltas.data[i][j]);
+						}
+						exampleOutputDeltas.push(nodeDeltas);
+					}
+					outputDeltas.push(exampleOutputDeltas);
+
+					// create weights hidden --> output matrix
+					const weights_ho = new Matrix(
+						this.Layers[this.Layers.length - 1].Nodes.length,
+						this.Layers[this.Layers.length - 2].Nodes.length
+					);
+
+					// populate weights_ho
+					for (
+						let i = 0;
+						i < this.Layers[this.Layers.length - 1].Nodes.length;
+						++i
+					) {
+						const node = this.Layers[this.Layers.length - 1].Nodes[i];
+
+						for (let j = 0; j < node.Connections.length; ++j) {
+							const connection = node.Connections[j];
+
+							// set values in matrix's data array to the corresponding connections weight
+							weights_ho.data[i][j] = connection.weight;
+						}
+					}
+
+					// Calculate the hidden layer errors
+					let who_t = Matrix.transpose(weights_ho);
+					let hidden_errors = Matrix.multiply(who_t, output_errors);
+
+					// Calculate hidden gradient
+					let hidden_gradient = Matrix.map(hidden, sigmoidPrime);
+					hidden_gradient.multiply(hidden_errors);
+					hidden_gradient.multiply(this.learningRate);
+
+					// Calculate input --> hidden deltas
+					let inputs_T = Matrix.transpose(inputs);
+					let weight_ih_deltas = Matrix.multiply(hidden_gradient, inputs_T);
+
+					let exampleHiddenDeltas = [];
+					for (let i = 0; i < this.Layers[1].Nodes.length; ++i) {
+						const node = this.Layers[1].Nodes[i];
+
+						const nodeDeltas = [];
+						for (let j = 0; j < node.Connections.length; ++j) {
+							// const connection = node.Connections[j];
+
+							// connection.weight += weight_ih_deltas.data[i][j];
+							nodeDeltas.push(weight_ih_deltas.data[i][j]);
+						}
+						exampleHiddenDeltas.push(nodeDeltas);
+					}
+					hiddenDeltas.push(exampleHiddenDeltas);
+
+					// log('\n\n');
+					// nodes = this.inspect();
+					// for (const node of nodes) {
+					// 	log(node);
+					// }
+					// log('\n\n');
+				}
+
+				// log('outputDeltas', outputDeltas);
+				// log('outputDeltas[0][0][0]', outputDeltas[0][0]);
+				// log('hiddenDeltas', hiddenDeltas);
+				// log('hiddenDeltas[0][0][0]', hiddenDeltas[0][0]);
+
+				for (let i = 0; i < this.Layers[2].Nodes.length; ++i) {
+					const node = this.Layers[2].Nodes[i];
+
+					for (let j = 0; j < node.Connections.length; ++j) {
+						const connection = node.Connections[j];
+
+						let sum = 0;
+
+						for (let k = 0; k < chunkSize; ++k) {
+							// log('outputDeltas[k][i][j]', outputDeltas[k][i][j]);
+							sum += Number(outputDeltas[k][i][j]);
+						}
+
+						connection.weight += sum / chunkSize;
+					}
+				}
+
+				for (let i = 0; i < this.Layers[1].Nodes.length; ++i) {
+					const node = this.Layers[1].Nodes[i];
+
+					for (let j = 0; j < node.Connections.length; ++j) {
+						const connection = node.Connections[j];
+
+						let sum = 0;
+
+						for (let k = 0; k < chunkSize; ++k) {
+							// log('hiddenDeltas[k][i][j]', hiddenDeltas[k][i][j]);
+							sum += Number(hiddenDeltas[k][i][j]);
+						}
+
+						connection.weight += sum / chunkSize;
+					}
+				}
+
+				if (timeLogFlag) {
+					console.log(
+						`chunk ${chunk} / ${Math.floor(data.length / chunkSize)}`
+					);
+					console.timeEnd('chunk');
+				}
+
+				// log('\n\n');
+				// let nodesOutside = this.inspect();
+				// for (const node of nodesOutside) {
+				// 	log(node);
+				// }
+				// log('\n\n');
+				// log('\n\n');
+				// log('\n\n');
+				// log('\n\n');
+			}
+		}
 	}
 }
 

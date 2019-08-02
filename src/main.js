@@ -1,122 +1,133 @@
 const Network = require('./Network');
 
-module.exports = (train, test) => {
-	const network = new Network({
-		learningRate: 0.1,
-		layers: [
-			{
-				numNodes: 784
-			},
-			{
-				numNodes: 64
-			},
-			{
-				numNodes: 16
-			},
-			{
-				numNodes: 10
-			}
-		]
-	});
+const train = require('../train.json');
+const test = require('../test.json');
 
-	const TRAINING_ROUNDS = 50;
-	const TRAINING_ITERATIONS_ROUND = 1000;
+const args = process.argv;
+console.log(args);
 
-	const TEST_ROUNDS = 1;
-	const TEST_ITERATIONS_ROUND = 1;
+const TRAINING_DATA_PERCENTAGE = 100;
+
+const TRAINING_ROUNDS = Number(process.argv[2]);
+const TRAINING_ITERATIONS_ROUND = 1;
+const TRAINING_CHUNK_SIZE = Number(process.argv[3]);
+
+const TEST_ROUNDS = 9999;
+const TEST_ITERATIONS_ROUND = 1;
+
+const HIDDEN_LAYER_SIZE = Number(process.argv[4]);
+const LEARNING_RATE = Number(process.argv[5]);
+
+/*
+
+
+
+*/
+
+let trainingData = [];
+
+for (
+	let i = 0;
+	i < Math.floor((train.length - 1) * (TRAINING_DATA_PERCENTAGE / 100));
+	++i
+) {
+	const example = train[i];
+	let output = {
+		inputs: example.image,
+		outputs: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+	};
+
+	output.outputs[example.label] = 1;
+
+	trainingData.push(output);
+}
+
+const network = new Network({
+	learningRate: LEARNING_RATE,
+	layers: [
+		{
+			numNodes: 784
+		},
+		{
+			numNodes: HIDDEN_LAYER_SIZE
+		},
+		{
+			numNodes: 10
+		}
+	]
+});
+
+module.exports = () => {
 	for (let round = 0; round < TRAINING_ROUNDS; ++round) {
-		let trainingData = [];
-		for (
-			let i = TRAINING_ITERATIONS_ROUND * round;
-			i < TRAINING_ITERATIONS_ROUND + TRAINING_ITERATIONS_ROUND * round;
-			++i
-		) {
-			const example = train[i];
-			let output = {
-				inputs: example.image,
-				outputs: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-			};
-
-			output.outputs[example.label] = 1;
-
-			// console.log(example.label);
-			// console.log(output.outputs);
-
-			trainingData.push(output);
-		}
-
-		console.log(`\n\ntraining round ${round + 1}`);
+		console.log(
+			'=========================================================================================================================================='
+		);
+		console.log('\n\n\n\n\n\n\n');
+		console.log(
+			'=========================================================================================================================================='
+		);
+		console.log(`training round ${round + 1}`);
 		// network.train(trainingData);
-		network.train(trainingData);
 
-		let testExample = test[1];
+		console.time('time');
 
-		network.setInputs(testExample.image);
-
-		network.calculate();
-
-		const outputs = network.getOutputs();
-
-		const guess = outputs.indexOf(Math.max(...outputs));
-
-		console.log('guess:');
-		console.log(guess);
-
-		if (guess == -1) {
-			console.log(network.Layers);
-
-			for (let i = 0; i < network.Layers.length; ++i) {
-				const layer = network.Layers[i];
-
-				console.log('\n\nlayer' + i);
-
-				for (let j = 0; j < layer.Nodes.length; ++j) {
-					const node = layer.Nodes[j];
-
-					if (node.value == NaN) {
-						console.log('node' + j);
-						if (i > 0) {
-							let output = '';
-							for (let k = 0; k < node.Connections.length; ++k) {
-								const connection = node.Connections[k];
-								output += `c${k}: ${connection.weight} `;
-								nanflag = true;
-							}
-							console.log(output);
-						}
-					}
-
-					console.log('node' + j, node.value);
-					if (i > 0) {
-						let nanflag = false;
-						let output = '';
-						for (let k = 0; k < node.Connections.length; ++k) {
-							const connection = node.Connections[k];
-							if (connection.weight == NaN) {
-								output += `c${k}: ${connection.weight} `;
-								nanflag = true;
-							}
-						}
-						if (nanflag) {
-							console.log(output);
-						}
-					}
-				}
-			}
-			break;
+		for (let i = 0; i < TRAINING_ITERATIONS_ROUND; ++i) {
+			network.train4(shuffle(trainingData), TRAINING_CHUNK_SIZE, true, false);
+			console.timeLog('time');
 		}
 
-		console.log('label:');
-		console.log(testExample.label);
+		// nodes = network.inspect();
+		// let outputFlag = false;
+		// let inputLayerVals = '';
+		// for (const node of nodes) {
+		// 	switch (node.layer) {
+		// 		case 0:
+		// 			inputLayerVals += ` n${node.node}: ${node.val}`;
+		// 			break;
+		// 		case 1:
+		// 			if (!outputFlag) {
+		// 				console.log('inputLayerVals\n', inputLayerVals);
+		// 				outputFlag = true;
+		// 			}
+		// 			console.log('node ', node.node, '\tval ', node.val);
+		// 			break;
+		// 		case 2:
+		// 			console.log(node);
+		// 			break;
+		// 	}
+		// }
 
-		for (const output in outputs) {
-			console.log('output ' + output + ': ', outputs[output]);
+		console.log(`training round ${round + 1}`);
+		console.log('time:');
+		console.timeEnd('time');
+
+		for (let i = 0; i < 2; ++i) {
+			let testExample = test[i];
+
+			network.setInputs(testExample.image);
+
+			network.calculate();
+
+			const outputs = network.getOutputs();
+
+			const guess = outputs.indexOf(Math.max(...outputs));
+
+			console.log('guess:');
+			console.log(guess);
+
+			console.log('label:');
+			console.log(testExample.label);
+
+			console.table(outputs);
+			// for (const output in outputs) {
+			// 	console.log('output ' + output + ': ', outputs[output]);
+			// }
 		}
 	}
 	let hits = 0;
 	let tries = 0;
 	for (let round = 0; round < TEST_ROUNDS; ++round) {
-		let trainingData = [];
+		let testingData = [];
 		for (
 			let i = TEST_ITERATIONS_ROUND * round;
 			i < TEST_ITERATIONS_ROUND + TEST_ITERATIONS_ROUND * round;
@@ -134,13 +145,13 @@ module.exports = (train, test) => {
 			// console.log(example.label);
 			// console.log(output.outputs);
 
-			trainingData.push(output);
+			testingData.push(output);
 		}
 
-		for (const data of trainingData) {
+		for (const data of testingData) {
 			++tries;
 			console.log(`\n\ntest round ${round + 1}`);
-			// network.train(trainingData);
+			// network.train(testingData);
 
 			let testExample = data;
 
@@ -164,16 +175,19 @@ module.exports = (train, test) => {
 				console.log('hit!');
 			}
 
-			console.log('misses: ', tries - hits);
-			console.log('hits: ', hits);
-			console.log('tries: ', tries);
-			console.log(
-				'percentage: ' + Math.round((hits / tries) * 10000) / 100 + '%'
-			);
-
+			// console.table(outputs);
 			// for (const output in outputs) {
 			// 	console.log('output ' + output + ': ', outputs[output]);
 			// }
 		}
 	}
+
+	console.log('misses: ', tries - hits);
+	console.log('hits: ', hits);
+	console.log('tries: ', tries);
+	console.log('percentage: ' + Math.round((hits / tries) * 10000) / 100 + '%');
 };
+
+function shuffle(array) {
+	return array.sort(() => Math.random() - 0.5);
+}
