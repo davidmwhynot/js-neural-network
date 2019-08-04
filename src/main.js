@@ -52,6 +52,9 @@ const network = new Network({
 			numNodes: HIDDEN_LAYER_SIZE
 		},
 		{
+			numNodes: 128
+		},
+		{
 			numNodes: 10
 		}
 	]

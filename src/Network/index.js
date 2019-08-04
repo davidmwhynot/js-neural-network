@@ -286,7 +286,7 @@ class Network {
 			}
 
 			if (timeLogFlag) {
-				console.log(`round: ${round}\tchunk: ${chunk + 1} / ${chunks}`);
+				console.log(`round: ${round + 1}\tchunk: ${chunk + 1} / ${chunks}`);
 				console.timeEnd('chunk');
 			}
 
