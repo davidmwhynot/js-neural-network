@@ -1,3 +1,4 @@
+/* eslint no-unused-expressions: "off" */
 const Layer = require('./Layer');
 const Matrix = require('./Matrix');
 
