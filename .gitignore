@@ -4,3 +4,4 @@ train.json
 .vscode
 output.*.log
 output.log
+percentages.log
