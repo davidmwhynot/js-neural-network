@@ -1,7 +1,8 @@
-const { GPU, input } = require('gpu.js');
-
-const Layer = require('./Layer');
-const Matrix = require('./Matrix');
+/* eslint-disable */
+/* eslint no-unused-expressions: "off" */
+import { GPU, input } from 'gpu.js';
+import Layer from './Layer';
+import Matrix from './Matrix';
 
 const gpu = new GPU();
 
@@ -1070,7 +1071,7 @@ function sigmoidPrime(x) {
 // 	return sigmoid(x) * (1 - sigmoid(x));
 // }
 
-module.exports = Network;
+export default Network;
 
 /*
 x = weight

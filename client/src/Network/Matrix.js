@@ -78,7 +78,9 @@ class Matrix {
 		if (n instanceof Matrix) {
 			const kernel = gpu.createKernel(
 				function(a, b) {
-					return a[x][y] + b[x][y];
+					return (
+						a[this.thread.x][this.thread.y] + b[this.thread.x][this.thread.y]
+					);
 				},
 				{
 					...settings,
@@ -93,7 +95,7 @@ class Matrix {
 		} else {
 			const kernel = gpu.createKernel(
 				function(a, b) {
-					return a[x][y] + b;
+					return a[this.thread.x][this.thread.y] + b;
 				},
 				{
 					...settings,
@@ -234,4 +236,4 @@ class Matrix {
 	}
 }
 
-module.exports = Matrix;
+export default Matrix;
