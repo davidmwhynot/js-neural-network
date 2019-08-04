@@ -19,6 +19,16 @@ class Layer {
 		return output;
 	}
 
+	getNodeValsTransposed() {
+		const output = [];
+
+		for (const node of this.Nodes) {
+			output.push([node.value]);
+		}
+
+		return output;
+	}
+
 	getWeights() {
 		if (this.Nodes[0].Connections) {
 			const output = [];
@@ -37,6 +47,16 @@ class Layer {
 		} else {
 			return [];
 		}
+	}
+
+	getBiases() {
+		const output = [];
+
+		for (const node of this.Nodes) {
+			output.push([node.bias]);
+		}
+
+		return output;
 	}
 
 	connectNodes(inputLayer) {
