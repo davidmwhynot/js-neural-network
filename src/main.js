@@ -8,15 +8,15 @@ console.log(args);
 
 const TRAINING_DATA_PERCENTAGE = 100;
 
-const TRAINING_ROUNDS = Number(process.argv[2]);
+const TRAINING_ROUNDS = Number(process.argv[2]) || 1;
 const TRAINING_ITERATIONS_ROUND = 1;
-const TRAINING_CHUNK_SIZE = Number(process.argv[3]);
+const TRAINING_CHUNK_SIZE = Number(process.argv[3]) || 200;
 
 const TEST_ROUNDS = 9999;
 const TEST_ITERATIONS_ROUND = 1;
 
-const HIDDEN_LAYER_SIZE = Number(process.argv[4]);
-const LEARNING_RATE = Number(process.argv[5]);
+const HIDDEN_LAYER_SIZE = Number(process.argv[4]) || 32;
+const LEARNING_RATE = Number(process.argv[5]) || 1;
 
 /*
 
@@ -52,6 +52,9 @@ const network = new Network({
 			numNodes: HIDDEN_LAYER_SIZE
 		},
 		{
+			numNodes: 128
+		},
+		{
 			numNodes: 10
 		}
 	]
@@ -72,7 +75,7 @@ module.exports = () => {
 		console.time('time');
 
 		for (let i = 0; i < TRAINING_ITERATIONS_ROUND; ++i) {
-			network.train4(shuffle(trainingData), TRAINING_CHUNK_SIZE, true, false);
+			network.train(shuffle(trainingData), TRAINING_CHUNK_SIZE, true, false);
 			console.timeLog('time');
 		}
 
@@ -123,69 +126,71 @@ module.exports = () => {
 			// 	console.log('output ' + output + ': ', outputs[output]);
 			// }
 		}
-	}
-	let hits = 0;
-	let tries = 0;
-	for (let round = 0; round < TEST_ROUNDS; ++round) {
-		let testingData = [];
-		for (
-			let i = TEST_ITERATIONS_ROUND * round;
-			i < TEST_ITERATIONS_ROUND + TEST_ITERATIONS_ROUND * round;
-			++i
-		) {
-			const example = test[i];
-			let output = {
-				inputs: example.image,
-				outputs: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-				label: example.label
-			};
+		let hits = 0;
+		let tries = 0;
+		for (let round = 0; round < TEST_ROUNDS; ++round) {
+			let testingData = [];
+			for (
+				let i = TEST_ITERATIONS_ROUND * round;
+				i < TEST_ITERATIONS_ROUND + TEST_ITERATIONS_ROUND * round;
+				++i
+			) {
+				const example = test[i];
+				let output = {
+					inputs: example.image,
+					outputs: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+					label: example.label
+				};
 
-			output.outputs[example.label] = 1;
+				output.outputs[example.label] = 1;
 
-			// console.log(example.label);
-			// console.log(output.outputs);
+				// console.log(example.label);
+				// console.log(output.outputs);
 
-			testingData.push(output);
-		}
-
-		for (const data of testingData) {
-			++tries;
-			console.log(`\n\ntest round ${round + 1}`);
-			// network.train(testingData);
-
-			let testExample = data;
-
-			network.setInputs(testExample.inputs);
-
-			network.calculate();
-
-			const outputs = network.getOutputs();
-
-			console.log('guess:');
-			// console.log(outputs);
-			// const max = Math.max(1, 2, 3);
-			// console.log(max);
-			const guess = outputs.indexOf(Math.max(...outputs));
-			console.log(guess);
-			console.log('label:');
-			console.log(testExample.label);
-
-			if (guess == testExample.label) {
-				++hits;
-				console.log('hit!');
+				testingData.push(output);
 			}
 
-			// console.table(outputs);
-			// for (const output in outputs) {
-			// 	console.log('output ' + output + ': ', outputs[output]);
-			// }
-		}
-	}
+			for (const data of testingData) {
+				++tries;
+				// console.log(`\n\ntest round ${round + 1}`);
+				// network.train(testingData);
 
-	console.log('misses: ', tries - hits);
-	console.log('hits: ', hits);
-	console.log('tries: ', tries);
-	console.log('percentage: ' + Math.round((hits / tries) * 10000) / 100 + '%');
+				let testExample = data;
+
+				network.setInputs(testExample.inputs);
+
+				network.calculate();
+
+				const outputs = network.getOutputs();
+
+				// console.log('guess:');
+				// console.log(outputs);
+				// const max = Math.max(1, 2, 3);
+				// console.log(max);
+				const guess = outputs.indexOf(Math.max(...outputs));
+				// console.log(guess);
+				// console.log('label:');
+				// console.log(testExample.label);
+
+				if (guess == testExample.label) {
+					++hits;
+					// console.log('hit!');
+				}
+
+				// console.table(outputs);
+				// for (const output in outputs) {
+				// 	console.log('output ' + output + ': ', outputs[output]);
+				// }
+			}
+		}
+
+		console.log('misses: ', tries - hits);
+		console.log('hits: ', hits);
+		console.log('tries: ', tries);
+		console.log(
+			'percentage: ' + Math.round((hits / tries) * 10000) / 100 + '%'
+		);
+	}
 };
 
 function shuffle(array) {

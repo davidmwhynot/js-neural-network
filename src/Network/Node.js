@@ -4,6 +4,7 @@ class Node {
 	constructor() {
 		this.value = Math.random() / 4 - 0.125;
 		this.Connections = [];
+		this.bias = Math.random();
 	}
 
 	connect(inputLayer) {
@@ -24,6 +25,8 @@ class Node {
 		for (const connection of this.Connections) {
 			rawSum += connection.calculate();
 		}
+
+		rawSum += this.bias;
 
 		this.value = this.sigmoid(rawSum);
 	}

@@ -8,7 +8,13 @@ module.exports = () => {
 				numNodes: 2
 			},
 			{
-				numNodes: 256
+				numNodes: 16
+			},
+			{
+				numNodes: 16
+			},
+			{
+				numNodes: 16
 			},
 			{
 				numNodes: 1
@@ -93,7 +99,8 @@ module.exports = () => {
 		for (let i = 0; i < 10000; ++i) {
 			// for (let j = 0; j < 1; ++j) {
 			// 	for (let i = 0; i < 1; ++i) {
-			network.train4(shuffle(trainingData), 4, false, false);
+			network.train(shuffle(trainingData), 4, false, false);
+			// network.train2(shuffle(trainingData), 4, false, true);
 			// network.train3(shuffle(trainingData), true);
 			// network.train3(trainingData, true);
 			// network.train(trainingData);
