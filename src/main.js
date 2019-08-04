@@ -75,7 +75,13 @@ module.exports = () => {
 		console.time('time');
 
 		for (let i = 0; i < TRAINING_ITERATIONS_ROUND; ++i) {
-			network.train(shuffle(trainingData), TRAINING_CHUNK_SIZE, true, false);
+			network.train(
+				shuffle(trainingData),
+				TRAINING_CHUNK_SIZE,
+				round,
+				true,
+				false
+			);
 			console.timeLog('time');
 		}
 

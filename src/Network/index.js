@@ -82,7 +82,7 @@ class Network {
 		return output;
 	}
 
-	train(data, chunkSize, timeLogFlag, logFlag) {
+	train(data, chunkSize, round, timeLogFlag, logFlag) {
 		const log = (...s) => {
 			logFlag ? console.log(...s) : '';
 		};
@@ -286,7 +286,7 @@ class Network {
 			}
 
 			if (timeLogFlag) {
-				console.log(`chunk ${chunk + 1} / ${chunks}`);
+				console.log(`round: ${round}\tchunk: ${chunk + 1} / ${chunks}`);
 				console.timeEnd('chunk');
 			}
 
