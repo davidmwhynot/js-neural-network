@@ -1,3 +1,12 @@
+const { GPU } = require('gpu.js');
+const gpu = new GPU();
+
+const settings = {
+	// precision: 'single'
+	optimizeFloatMemory: true,
+	loopMaxIterations: 2048
+};
+
 class Matrix {
 	constructor(rows, cols) {
 		this.rows = rows;
@@ -65,6 +74,40 @@ class Matrix {
 		}
 	}
 
+	gpuAdd(n) {
+		if (n instanceof Matrix) {
+			const kernel = gpu.createKernel(
+				function(a, b) {
+					return a[x][y] + b[x][y];
+				},
+				{
+					...settings,
+					output: {
+						x: this.rows,
+						y: this.cols
+					}
+				}
+			);
+
+			this.data = kernel(this.data, n.data);
+		} else {
+			const kernel = gpu.createKernel(
+				function(a, b) {
+					return a[x][y] + b;
+				},
+				{
+					...settings,
+					output: {
+						x: this.rows,
+						y: this.cols
+					}
+				}
+			);
+
+			this.data = kernel(this.data, n);
+		}
+	}
+
 	static transpose(matrix) {
 		let result = new Matrix(matrix.cols, matrix.rows);
 		for (let i = 0; i < matrix.rows; i++) {
@@ -73,6 +116,55 @@ class Matrix {
 			}
 		}
 		return result;
+	}
+
+	static gpuMultiplyKernel(a, b, kernel) {
+		// Matrix product
+		if (a.cols !== b.rows) {
+			console.log('a', a);
+			console.log('b', b);
+			console.error(new Error('Columns of A must match rows of B.'));
+			return undefined;
+		} else {
+			let result = new Matrix(a.rows, b.cols);
+			result.data = kernel(a.data, b.data);
+			// console.log('result', result);
+			// console.log('result.data[0][0]', result.data[0][0]);
+			return result;
+		}
+	}
+
+	static gpuMultiply(a, b) {
+		// Matrix product
+		if (a.cols !== b.rows) {
+			console.log('a', a);
+			console.log('b', b);
+			console.error(new Error('Columns of A must match rows of B.'));
+			return undefined;
+		} else {
+			let result = new Matrix(a.rows, b.cols);
+			const kernel = gpu.createKernel(
+				function(a, b) {
+					let sum = 0;
+					// i = y = a.rows
+					// j = x = b.cols
+					for (let k = 0; k < this.constants.size; ++k) {
+						sum += a[this.thread.x][k] * b[k][this.thread.y];
+					}
+					return sum;
+				},
+				{
+					...settings,
+					output: [b.cols, a.rows],
+					constants: { size: a.cols }
+				}
+			);
+
+			result.data = kernel(a.data, b.data);
+			// console.log('result', result);
+			// console.log('result.data[0][0]', result.data[0][0]);
+			return result;
+		}
 	}
 
 	static multiply(a, b) {

@@ -18,6 +18,8 @@ const TEST_ITERATIONS_ROUND = 1;
 const HIDDEN_LAYER_SIZE = Number(process.argv[4]) || 32;
 const LEARNING_RATE = Number(process.argv[5]) || 1;
 
+const TRAIN_GPU = Number(process.argv[6]) || 0;
+
 /*
 
 
@@ -61,6 +63,7 @@ const network = new Network({
 });
 
 module.exports = () => {
+	console.time('cpu');
 	for (let round = 0; round < TRAINING_ROUNDS; ++round) {
 		console.log(
 			'=========================================================================================================================================='
@@ -75,13 +78,23 @@ module.exports = () => {
 		console.time('time');
 
 		for (let i = 0; i < TRAINING_ITERATIONS_ROUND; ++i) {
-			network.train(
-				shuffle(trainingData),
-				TRAINING_CHUNK_SIZE,
-				round,
-				true,
-				false
-			);
+			if (TRAIN_GPU === 1) {
+				network.trainGPU(
+					shuffle(trainingData),
+					TRAINING_CHUNK_SIZE,
+					round,
+					true,
+					false
+				);
+			} else {
+				network.train(
+					shuffle(trainingData),
+					TRAINING_CHUNK_SIZE,
+					round,
+					true,
+					false
+				);
+			}
 			console.timeLog('time');
 		}
 
@@ -197,6 +210,7 @@ module.exports = () => {
 			'percentage: ' + Math.round((hits / tries) * 10000) / 100 + '%'
 		);
 	}
+	console.timeEnd('cpu');
 };
 
 function shuffle(array) {
