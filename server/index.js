@@ -3,17 +3,18 @@ const path = require('path');
 const http = require('http');
 const socketio = require('socket.io');
 const EventEmitter = require('events');
+const fs = require('fs');
 
 const Network = require('../src/Network');
 
 const network = new Network({
-	learningRate: 3,
+	learningRate: 1,
 	layers: [
 		{
 			numNodes: 784
 		},
 		{
-			numNodes: 64
+			numNodes: 128
 		},
 		{
 			numNodes: 10
@@ -21,9 +22,10 @@ const network = new Network({
 	]
 });
 
-const TRAINING_DATA_PERCENTAGE = 100;
+const TRAINING_DATA_PERCENTAGE = 10;
 
 const training = require('../train.json');
+const testing = require('../test.json');
 
 let trainingData = [];
 
@@ -48,9 +50,22 @@ for (
 
 	trainingData.push(output);
 }
-for (let i = 0; i < 3; ++i) {
-	network.train(shuffle(trainingData), 500, i, 3, true, false);
+for (let i = 0; i < 1; ++i) {
+	network.train(shuffle(trainingData), 500, i, 1, true, false);
+	for (let j = 0; j < 5; ++j) {
+		network.setInputs(testing[Math.floor(Math.random() * 100) * j].image);
+		network.calculate();
+		console.log('testing for round ' + i);
+		console.log(network.getOutputs());
+		console.log('label: ', testing[j].label);
+	}
 }
+
+const weightsJSON = JSON.stringify(network.getWeights());
+fs.writeFileSync('weights.json', weightsJSON, 'utf8');
+
+const biasesJSON = JSON.stringify(network.getBiases());
+fs.writeFileSync('biases.json', biasesJSON, 'utf8');
 
 class Emitter extends EventEmitter {}
 

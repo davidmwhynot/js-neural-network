@@ -80,7 +80,10 @@ class Network {
 				forward_multiply_kernel,
 				forward_calculate_kernel,
 				function(w, i, b) {
-					return forward_calculate_kernel(forward_multiply_kernel(w, i), b);
+					return forward_calculate_kernel(
+						forward_multiply_kernel(w, i),
+						b
+					);
 				}
 			);
 		}
@@ -239,6 +242,22 @@ class Network {
 		}
 	}
 
+	getWeights() {
+		const output = [];
+		for (let i = 1; i < this.Layers.length - 1; ++i) {
+			output.push(this.Layers[i].getWeights());
+		}
+		return output;
+	}
+
+	getBiases() {
+		const output = [];
+		for (let i = 1; i < this.Layers.length - 1; ++i) {
+			output.push(this.Layers[i].getBiases());
+		}
+		return output;
+	}
+
 	connectLayers() {
 		for (let i = 1; i < this.Layers.length; ++i) {
 			this.Layers[i].connectNodes(this.Layers[i - 1]);
@@ -328,7 +347,8 @@ class Network {
 				let output_errors_kernel = gpu.createKernel(
 					function(a, b) {
 						return (
-							a[this.thread.x][this.thread.y] - b[this.thread.x][this.thread.y]
+							a[this.thread.x][this.thread.y] -
+							b[this.thread.x][this.thread.y]
 						);
 					},
 					{
@@ -367,7 +387,8 @@ class Network {
 				let gradients_multply_kernel = gpu.createKernel(
 					function(a, b) {
 						return (
-							a[this.thread.x][this.thread.y] * b[this.thread.x][this.thread.y]
+							a[this.thread.x][this.thread.y] *
+							b[this.thread.x][this.thread.y]
 						);
 					},
 					{
@@ -556,7 +577,9 @@ class Network {
 
 					let biasSum = 0;
 					for (let k = 0; k < chunkSize; ++k) {
-						biasSum += Number(exampleHiddenBiasGradients[k][z - 2][i]);
+						biasSum += Number(
+							exampleHiddenBiasGradients[k][z - 2][i]
+						);
 					}
 					node.bias += biasSum / chunkSize;
 
@@ -795,7 +818,9 @@ class Network {
 
 					let biasSum = 0;
 					for (let k = 0; k < chunkSize; ++k) {
-						biasSum += Number(exampleHiddenBiasGradients[k][z - 2][i]);
+						biasSum += Number(
+							exampleHiddenBiasGradients[k][z - 2][i]
+						);
 					}
 					node.bias += biasSum / chunkSize;
 
@@ -814,7 +839,9 @@ class Network {
 			}
 
 			if (timeLogFlag) {
-				console.log(`round: ${round + 1}\tchunk: ${chunk + 1} / ${chunks}`);
+				console.log(
+					`round: ${round + 1}\tchunk: ${chunk + 1} / ${chunks}`
+				);
 				console.timeEnd('chunk');
 			}
 
@@ -1037,7 +1064,8 @@ class Network {
 
 			if (timeLogFlag) {
 				console.log(
-					`round: ${round + 1} / ${rounds}\tchunk: ${chunk + 1} / ${chunks}`
+					`round: ${round + 1} / ${rounds}\tchunk: ${chunk +
+						1} / ${chunks}`
 				);
 				console.timeEnd('chunk');
 			}
