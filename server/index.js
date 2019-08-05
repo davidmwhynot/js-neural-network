@@ -73,7 +73,7 @@ class Emitter extends EventEmitter {}
 
 const nn = require('../src');
 
-const PORT = 3001;
+const PORT = 80;
 
 const app = express();
 const server = http.createServer(app);
