@@ -22,50 +22,50 @@ const network = new Network({
 	]
 });
 
-const TRAINING_DATA_PERCENTAGE = 10;
+// const TRAINING_DATA_PERCENTAGE = 10;
 
-const training = require('../train.json');
-const testing = require('../test.json');
+// const training = require('../train.json');
+// const testing = require('../test.json');
 
-let trainingData = [];
+// let trainingData = [];
 
-for (
-	let i = 0;
-	i < Math.floor((training.length - 1) * (TRAINING_DATA_PERCENTAGE / 100));
-	++i
-) {
-	const example = training[i];
-	if (
-		i ==
-		Math.floor((training.length - 1) * (TRAINING_DATA_PERCENTAGE / 100) - 1)
-	) {
-		console.log(example.label);
-	}
-	let output = {
-		inputs: example.image,
-		outputs: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-	};
+// for (
+// 	let i = 0;
+// 	i < Math.floor((training.length - 1) * (TRAINING_DATA_PERCENTAGE / 100));
+// 	++i
+// ) {
+// 	const example = training[i];
+// 	if (
+// 		i ==
+// 		Math.floor((training.length - 1) * (TRAINING_DATA_PERCENTAGE / 100) - 1)
+// 	) {
+// 		console.log(example.label);
+// 	}
+// 	let output = {
+// 		inputs: example.image,
+// 		outputs: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+// 	};
 
-	output.outputs[example.label] = 1;
+// 	output.outputs[example.label] = 1;
 
-	trainingData.push(output);
-}
-for (let i = 0; i < 1; ++i) {
-	network.train(shuffle(trainingData), 500, i, 1, true, false);
-	for (let j = 0; j < 5; ++j) {
-		network.setInputs(testing[Math.floor(Math.random() * 100) * j].image);
-		network.calculate();
-		console.log('testing for round ' + i);
-		console.log(network.getOutputs());
-		console.log('label: ', testing[j].label);
-	}
-}
+// 	trainingData.push(output);
+// }
+// for (let i = 0; i < 1; ++i) {
+// 	network.train(shuffle(trainingData), 500, i, 1, true, false);
+// 	for (let j = 0; j < 5; ++j) {
+// 		network.setInputs(testing[Math.floor(Math.random() * 100) * j].image);
+// 		network.calculate();
+// 		console.log('testing for round ' + i);
+// 		console.log(network.getOutputs());
+// 		console.log('label: ', testing[j].label);
+// 	}
+// }
 
-const weightsJSON = JSON.stringify(network.getWeights());
-fs.writeFileSync('weights.json', weightsJSON, 'utf8');
+// const weightsJSON = JSON.stringify(network.getWeights());
+// fs.writeFileSync('weights.json', weightsJSON, 'utf8');
 
-const biasesJSON = JSON.stringify(network.getBiases());
-fs.writeFileSync('biases.json', biasesJSON, 'utf8');
+// const biasesJSON = JSON.stringify(network.getBiases());
+// fs.writeFileSync('biases.json', biasesJSON, 'utf8');
 
 class Emitter extends EventEmitter {}
 
