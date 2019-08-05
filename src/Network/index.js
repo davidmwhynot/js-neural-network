@@ -267,7 +267,7 @@ class Network {
 		return output;
 	}
 
-	trainGPU2(data, chunkSize, round, timeLogFlag, logFlag) {
+	trainGPU2(data, chunkSize, round, rounds, timeLogFlag, logFlag) {
 		const log = (...s) => {
 			logFlag ? console.log(...s) : '';
 		};
@@ -592,7 +592,7 @@ class Network {
 		}
 	}
 
-	trainGPU(data, chunkSize, round, timeLogFlag, logFlag) {
+	trainGPU(data, chunkSize, round, rounds, timeLogFlag, logFlag) {
 		const log = (...s) => {
 			logFlag ? console.log(...s) : '';
 		};
@@ -831,7 +831,7 @@ class Network {
 		}
 	}
 
-	train(data, chunkSize, round, timeLogFlag, logFlag) {
+	train(data, chunkSize, round, rounds, timeLogFlag, logFlag) {
 		const log = (...s) => {
 			logFlag ? console.log(...s) : '';
 		};
@@ -1036,7 +1036,9 @@ class Network {
 			// }
 
 			if (timeLogFlag) {
-				console.log(`round: ${round}\tchunk: ${chunk + 1} / ${chunks}`);
+				console.log(
+					`round: ${round + 1} / ${rounds}\tchunk: ${chunk + 1} / ${chunks}`
+				);
 				console.timeEnd('chunk');
 			}
 

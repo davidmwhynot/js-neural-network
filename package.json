@@ -10,6 +10,8 @@
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
-		"gpu.js": "^2.0.0-rc.24"
+		"express": "^4.17.1",
+		"gpu.js": "^2.0.0-rc.24",
+		"socket.io": "^2.2.0"
 	}
 }
