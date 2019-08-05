@@ -5,7 +5,7 @@
 	"main": "index.js",
 	"scripts": {
 		"start": "node server/index.js",
-		"build": "cd client && npm i && npm run build"
+		"build": "curl -LO https://github.com/lorenmh/mnist_handwritten_json/raw/master/mnist_handwritten_test.json.gz && curl -LO https://github.com/lorenmh/mnist_handwritten_json/raw/master/mnist_handwritten_train.json.gz && gunzip *.gz && mv mnist_handwritten_train.json train.json && mv mnist_handwritten_test.json test.json && cd client && npm i && npm run build"
 	},
 	"keywords": [],
 	"author": "",
