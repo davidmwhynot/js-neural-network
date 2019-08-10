@@ -49,6 +49,16 @@ class Layer {
 		}
 	}
 
+	setWeights(weights) {
+		if (weights.length !== this.Nodes.length) {
+			throw new Error("Invalid input weights: dimensions must match layer's.");
+		} else {
+			for (let i = 0; i < weights.length; ++i) {
+				this.Nodes[i].setWeights(weights[i]);
+			}
+		}
+	}
+
 	getBiases() {
 		const output = [];
 

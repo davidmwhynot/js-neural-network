@@ -80,10 +80,7 @@ class Network {
 				forward_multiply_kernel,
 				forward_calculate_kernel,
 				function(w, i, b) {
-					return forward_calculate_kernel(
-						forward_multiply_kernel(w, i),
-						b
-					);
+					return forward_calculate_kernel(forward_multiply_kernel(w, i), b);
 				}
 			);
 		}
@@ -159,6 +156,18 @@ class Network {
 		}
 
 		this.connectLayers();
+	}
+
+	setWeights(weights) {
+		if (this.Layers.length - 1 !== weights.length) {
+			throw new Error(
+				"Invalid input weights: dimensions must match network's."
+			);
+		} else {
+			for (let i = 1; i < weights.length; ++i) {
+				this.Layers[i].setWeights(weights[i - 1]);
+			}
+		}
 	}
 
 	feedForward(inputArray) {
@@ -238,13 +247,13 @@ class Network {
 				const val = layer.Nodes[node].value;
 				output += `n${node}: ${Math.round(val * 1000) / 1000}   `;
 			}
-			// console.log(output);
+			console.log(output);
 		}
 	}
 
 	getWeights() {
 		const output = [];
-		for (let i = 1; i < this.Layers.length - 1; ++i) {
+		for (let i = 1; i < this.Layers.length; ++i) {
 			output.push(this.Layers[i].getWeights());
 		}
 		return output;
@@ -252,7 +261,7 @@ class Network {
 
 	getBiases() {
 		const output = [];
-		for (let i = 1; i < this.Layers.length - 1; ++i) {
+		for (let i = 1; i < this.Layers.length; ++i) {
 			output.push(this.Layers[i].getBiases());
 		}
 		return output;
@@ -347,8 +356,7 @@ class Network {
 				let output_errors_kernel = gpu.createKernel(
 					function(a, b) {
 						return (
-							a[this.thread.x][this.thread.y] -
-							b[this.thread.x][this.thread.y]
+							a[this.thread.x][this.thread.y] - b[this.thread.x][this.thread.y]
 						);
 					},
 					{
@@ -387,8 +395,7 @@ class Network {
 				let gradients_multply_kernel = gpu.createKernel(
 					function(a, b) {
 						return (
-							a[this.thread.x][this.thread.y] *
-							b[this.thread.x][this.thread.y]
+							a[this.thread.x][this.thread.y] * b[this.thread.x][this.thread.y]
 						);
 					},
 					{
@@ -577,9 +584,7 @@ class Network {
 
 					let biasSum = 0;
 					for (let k = 0; k < chunkSize; ++k) {
-						biasSum += Number(
-							exampleHiddenBiasGradients[k][z - 2][i]
-						);
+						biasSum += Number(exampleHiddenBiasGradients[k][z - 2][i]);
 					}
 					node.bias += biasSum / chunkSize;
 
@@ -818,9 +823,7 @@ class Network {
 
 					let biasSum = 0;
 					for (let k = 0; k < chunkSize; ++k) {
-						biasSum += Number(
-							exampleHiddenBiasGradients[k][z - 2][i]
-						);
+						biasSum += Number(exampleHiddenBiasGradients[k][z - 2][i]);
 					}
 					node.bias += biasSum / chunkSize;
 
@@ -839,9 +842,7 @@ class Network {
 			}
 
 			if (timeLogFlag) {
-				console.log(
-					`round: ${round + 1}\tchunk: ${chunk + 1} / ${chunks}`
-				);
+				console.log(`round: ${round + 1}\tchunk: ${chunk + 1} / ${chunks}`);
 				console.timeEnd('chunk');
 			}
 
@@ -891,6 +892,7 @@ class Network {
 			const exampleHiddenBiasGradients = [];
 			const outputBiasGradients = [];
 
+			console.time('calculate');
 			for (const example of examples) {
 				this.setInputs(example.inputs);
 				this.calculate();
@@ -1011,63 +1013,66 @@ class Network {
 				// }
 				// log('\n\n');
 			}
+			console.timeEnd('calculate');
 
-			// for (
-			// 	let i = 0;
-			// 	i < this.Layers[this.Layers.length - 1].Nodes.length;
-			// 	++i
-			// ) {
-			// 	const node = this.Layers[this.Layers.length - 1].Nodes[i];
+			console.time('adjust');
+			for (
+				let i = 0;
+				i < this.Layers[this.Layers.length - 1].Nodes.length;
+				++i
+			) {
+				const node = this.Layers[this.Layers.length - 1].Nodes[i];
 
-			// 	let biasSum = 0;
-			// 	for (let k = 0; k < chunkSize; ++k) {
-			// 		biasSum += outputBiasGradients[k][i];
-			// 	}
-			// 	node.bias += biasSum / chunkSize;
+				let biasSum = 0;
+				for (let k = 0; k < chunkSize; ++k) {
+					biasSum += outputBiasGradients[k][i];
+				}
+				node.bias += biasSum / chunkSize;
 
-			// 	for (let j = 0; j < node.Connections.length; ++j) {
-			// 		const connection = node.Connections[j];
+				for (let j = 0; j < node.Connections.length; ++j) {
+					const connection = node.Connections[j];
 
-			// 		let sum = 0;
+					let sum = 0;
 
-			// 		for (let k = 0; k < chunkSize; ++k) {
-			// 			sum += Number(outputDeltas[k][i][j]);
-			// 		}
+					for (let k = 0; k < chunkSize; ++k) {
+						sum += Number(outputDeltas[k][i][j]);
+					}
 
-			// 		connection.weight += sum / chunkSize;
-			// 	}
-			// }
+					connection.weight += sum / chunkSize;
+				}
+			}
 
-			// for (let z = this.Layers.length; z > 2; --z) {
-			// 	for (let i = 0; i < this.Layers[z - 2].Nodes.length; ++i) {
-			// 		const node = this.Layers[z - 2].Nodes[i];
+			for (let z = this.Layers.length; z > 2; --z) {
+				for (let i = 0; i < this.Layers[z - 2].Nodes.length; ++i) {
+					const node = this.Layers[z - 2].Nodes[i];
 
-			// 		let biasSum = 0;
-			// 		for (let k = 0; k < chunkSize; ++k) {
-			// 			biasSum += Number(exampleHiddenBiasGradients[k][z - 2][i]);
-			// 		}
-			// 		node.bias += biasSum / chunkSize;
+					let biasSum = 0;
+					for (let k = 0; k < chunkSize; ++k) {
+						biasSum += Number(exampleHiddenBiasGradients[k][z - 2][i]);
+					}
+					node.bias += biasSum / chunkSize;
 
-			// 		for (let j = 0; j < node.Connections.length; ++j) {
-			// 			const connection = node.Connections[j];
+					for (let j = 0; j < node.Connections.length; ++j) {
+						const connection = node.Connections[j];
 
-			// 			let sum = 0;
+						let sum = 0;
 
-			// 			for (let k = 0; k < chunkSize; ++k) {
-			// 				sum += Number(exampleHiddenDeltas[k][z - 2][i][j]);
-			// 			}
+						for (let k = 0; k < chunkSize; ++k) {
+							sum += Number(exampleHiddenDeltas[k][z - 2][i][j]);
+						}
 
-			// 			connection.weight += sum / chunkSize;
-			// 		}
-			// 	}
-			// }
+						connection.weight += sum / chunkSize;
+					}
+				}
+			}
+			console.timeEnd('adjust');
 
 			if (timeLogFlag) {
 				console.log(
-					`round: ${round + 1} / ${rounds}\tchunk: ${chunk +
-						1} / ${chunks}`
+					`round: ${round + 1} / ${rounds}\tchunk: ${chunk + 1} / ${chunks}`
 				);
 				console.timeEnd('chunk');
+				console.log('\n');
 			}
 
 			// log('\n\n');

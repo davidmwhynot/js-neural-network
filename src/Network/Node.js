@@ -19,6 +19,16 @@ class Node {
 		}
 	}
 
+	setWeights(weights) {
+		if (weights.length !== this.Connections.length) {
+			throw new Error("Invalid input weights: dimensions must match node's.");
+		} else {
+			for (let i = 0; i < weights.length; ++i) {
+				this.Connections[i].weight = weights[i];
+			}
+		}
+	}
+
 	calculate() {
 		let rawSum = 0;
 
