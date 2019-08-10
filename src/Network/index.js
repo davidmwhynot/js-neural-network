@@ -170,6 +170,18 @@ class Network {
 		}
 	}
 
+	setBiases(biases) {
+		if (this.Layers.length - 1 !== biases.length) {
+			throw new Error(
+				"Invalid input biases: dimensions must match network's."
+			);
+		} else {
+			for (let i = 1; i < biases.length; ++i) {
+				this.Layers[i].setBiases(biases[i - 1]);
+			}
+		}
+	}
+
 	feedForward(inputArray) {
 		let inputs = Matrix.fromArray(inputArray);
 		for (let i = 1; i < this.Layers.length; ++i) {

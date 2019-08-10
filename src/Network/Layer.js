@@ -69,6 +69,16 @@ class Layer {
 		return output;
 	}
 
+	setBiases(biases) {
+		if (biases.length !== this.Nodes.length) {
+			throw new Error("Invalid input biases: dimensions must match layer's.");
+		} else {
+			for (let i = 0; i < biases.length; ++i) {
+				this.Nodes[i].bias = biases[i];
+			}
+		}
+	}
+
 	connectNodes(inputLayer) {
 		for (const node of this.Nodes) {
 			node.connect(inputLayer.Nodes);
