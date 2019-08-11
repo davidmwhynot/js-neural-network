@@ -121,8 +121,8 @@ class Matrix {
 	static gpuMultiplyKernel(a, b, kernel) {
 		// Matrix product
 		if (a.cols !== b.rows) {
-			console.log('a', a);
-			console.log('b', b);
+			// console.log('a', a);
+			// console.log('b', b);
 			console.error(new Error('Columns of A must match rows of B.'));
 			return undefined;
 		} else {

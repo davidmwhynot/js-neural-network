@@ -50,7 +50,7 @@ for (let i = 0; i < 30; ++i) {
 	// network.train(shuffle(trainingData), 10, i, 1, true, false);
 	network.trainGPU2({
 		data: shuffle(trainingData),
-		chunkSize: 3000,
+		chunkSize: 6000,
 		round: i,
 		rounds: 30,
 		timeLogFlag: true,
@@ -100,13 +100,13 @@ for (let i = 0; i < 30; ++i) {
 
 	const weightsJSON = JSON.stringify(network.getWeights());
 	fs.writeFileSync(
-		'G:\\weights\\weights.4.' + i + '.json',
+		'G:\\weights\\weights.5.' + i + '.json',
 		weightsJSON,
 		'utf8'
 	);
 
 	const biasesJSON = JSON.stringify(network.getBiases());
-	fs.writeFileSync('G:\\biases\\biases.4.' + i + '.json', biasesJSON, 'utf8');
+	fs.writeFileSync('G:\\biases\\biases.5.' + i + '.json', biasesJSON, 'utf8');
 }
 
 function shuffle(array) {

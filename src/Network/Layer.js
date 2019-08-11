@@ -74,7 +74,7 @@ class Layer {
 			throw new Error("Invalid input biases: dimensions must match layer's.");
 		} else {
 			for (let i = 0; i < biases.length; ++i) {
-				this.Nodes[i].bias = biases[i];
+				this.Nodes[i].bias = biases[i][0];
 			}
 		}
 	}
