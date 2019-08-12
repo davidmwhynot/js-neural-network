@@ -14,7 +14,7 @@ console.log(args);
 
 const TRAINING_DATA_PERCENTAGE = 100;
 
-const TRAINING_ROUNDS = 10;
+const TRAINING_ROUNDS = 1;
 const TRAINING_CHUNK_SIZE = 6000;
 
 const HIDDEN_LAYER_SIZE = 64;
