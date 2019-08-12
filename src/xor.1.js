@@ -1,7 +1,7 @@
 const Network = require('./Network');
 
-const ROUNDS = 1000;
-const CHUNK_SIZE = 4;
+const ROUNDS = 1;
+const CHUNK_SIZE = 1;
 
 module.exports = () => {
 	const network = new Network({
@@ -24,24 +24,24 @@ module.exports = () => {
 
 	let trainingData = [];
 
-	for (let i = 0; i < 4; ++i) {
+	for (let i = 0; i < 1; ++i) {
 		// for (let i = 0; i < 40; ++i) {
 		trainingData.push({
 			inputs: [0, 0, 0, 0],
 			outputs: [0, 0]
 		});
-		trainingData.push({
-			inputs: [1, 1, 0, 0],
-			outputs: [1, 1]
-		});
-		trainingData.push({
-			inputs: [0, 0, 1, 1],
-			outputs: [1, 1]
-		});
-		trainingData.push({
-			inputs: [1, 1, 1, 1],
-			outputs: [0, 0]
-		});
+		// trainingData.push({
+		// 	inputs: [1, 1, 0, 0],
+		// 	outputs: [1, 1]
+		// });
+		// trainingData.push({
+		// 	inputs: [0, 0, 1, 1],
+		// 	outputs: [1, 1]
+		// });
+		// trainingData.push({
+		// 	inputs: [1, 1, 1, 1],
+		// 	outputs: [0, 0]
+		// });
 		// trainingData.push({
 		// 	inputs: [0, 0],
 		// 	outputs: [0]
@@ -100,16 +100,16 @@ module.exports = () => {
 		if (i % 100 === 0) {
 			console.log('i', i);
 		}
-		network.trainGPU2({
+		network.trainGPU({
 			data: shuffle(trainingData),
 			chunkSize: CHUNK_SIZE,
 			round: i,
 			rounds: ROUNDS,
 			timeLogFlag: false,
-			logFlag: false,
-			memoryLogFlag: false
+			logFlag: true,
+			memoryLogFlag: true
 		});
-		// network.train(shuffle(trainingData), CHUNK_SIZE, i, ROUNDS, false, false);
+		network.train(shuffle(trainingData), CHUNK_SIZE, i, ROUNDS, false, true);
 	}
 	network.setInputs([0, 0, 0, 0]);
 	network.calculate();
