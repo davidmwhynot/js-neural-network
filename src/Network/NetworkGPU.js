@@ -322,7 +322,7 @@ class Network {
 		}
 	}
 
-	trainGPU2({
+	trainGPU({
 		data,
 		chunkSize,
 		round,

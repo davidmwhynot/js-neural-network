@@ -106,7 +106,7 @@ class Network {
 			}
 		);
 
-		this.gradients_kernel = gpu.createKernel(
+		const gradients_kernel = gpu.createKernel(
 			function(a) {
 				return (
 					a[this.thread.x][this.thread.y] *
@@ -118,12 +118,11 @@ class Network {
 				output: {
 					y: this.Layers[this.Layers.length - 1].Nodes.length,
 					x: 1
-				},
-				pipeline: true
+				}
 			}
 		);
 
-		this.gradients_multply_kernel = gpu.createKernel(
+		const gradients_multply_kernel = gpu.createKernel(
 			function(a, b) {
 				return (
 					a[this.thread.x][this.thread.y] * b[this.thread.x][this.thread.y]
@@ -139,7 +138,7 @@ class Network {
 			}
 		);
 
-		this.gradients_learningRate_kernel = gpu.createKernel(
+		const gradients_learningRate_kernel = gpu.createKernel(
 			function(a, b) {
 				return a[this.thread.x][this.thread.y] * b;
 			},
@@ -148,17 +147,21 @@ class Network {
 				output: {
 					y: this.Layers[this.Layers.length - 1].Nodes.length,
 					x: 1
-				},
-				pipeline: true
+				}
 			}
 		);
 
-		// this.gradient_kernels = gpu.combineKernels(
-		// 	this.gradients_kernel,
-		// 	this.gradients_multply_kernel,
-		// 	this.gradients_learningRate_kernel
-
-		// )
+		this.gradient_kernels = gpu.combineKernels(
+			gradients_kernel,
+			gradients_multply_kernel,
+			gradients_learningRate_kernel,
+			function(errors, outputs, learningRate) {
+				return gradients_learningRate_kernel(
+					gradients_multply_kernel(gradients_kernel(outputs), errors),
+					learningRate
+				);
+			}
+		);
 
 		this.hidden_T_kernel = gpu.createKernel(
 			function(a) {
@@ -322,7 +325,7 @@ class Network {
 		}
 	}
 
-	trainGPU2({
+	trainGPU({
 		data,
 		chunkSize,
 		round,
@@ -331,26 +334,43 @@ class Network {
 		logFlag,
 		memoryLogFlag
 	}) {
-		const log = (...s) => {
-			logFlag ? console.log(...s) : '';
-		};
-		const table = (s, x) => {
+		const logFunctionGenerator = () => {
 			if (logFlag) {
-				console.log(s);
-				console.table(x);
+				return (...s) => {
+					console.log(...s);
+				};
+			} else {
+				return () => {};
 			}
 		};
-		const memLog = () => {
+		const tableFunctionGenerator = () => {
+			if (logFlag) {
+				return (s, x) => {
+					console.log(s);
+					console.table(x);
+				};
+			} else {
+				return () => {};
+			}
+		};
+		const memLogFunctionGenerator = () => {
 			if (memoryLogFlag) {
-				console.log('memory usage:');
-				const usage = process.memoryUsage();
-				console.log('rss: ' + usage.rss / 1000000 + 'MB');
-				console.log('heapTotal: ' + usage.heapTotal / 1000000 + 'MB');
-				console.log('heapUsed: ' + usage.heapUsed / 1000000 + 'MB');
-				console.log('external: ' + usage.external / 1000000 + 'MB');
-				console.log('\n');
+				return (s = 'memory usage:') => {
+					console.log(s);
+					const usage = process.memoryUsage();
+					console.log('rss: ' + usage.rss / 1000000 + 'MB');
+					console.log('heapTotal: ' + usage.heapTotal / 1000000 + 'MB');
+					console.log('heapUsed: ' + usage.heapUsed / 1000000 + 'MB');
+					console.log('external: ' + usage.external / 1000000 + 'MB');
+					console.log('\n');
+				};
+			} else {
+				return () => {};
 			}
 		};
+		const log = logFunctionGenerator();
+		const table = tableFunctionGenerator();
+		const memLog = memLogFunctionGenerator();
 
 		memLog();
 
@@ -378,7 +398,7 @@ class Network {
 				console.time('calculate');
 			}
 
-			// initiate deltas
+			// initiate output deltas
 			for (
 				let i = 0;
 				i < this.Layers[this.Layers.length - 1].Nodes.length;
@@ -395,8 +415,10 @@ class Network {
 
 			let weightsLayers = [];
 			for (let z = this.Layers.length; z > 2; --z) {
+				// precompute weights
 				weightsLayers[z] = this.Layers[z - 1].getWeights();
 
+				// initiate hidden deltas
 				const nodeDeltas = [];
 				for (let i = 0; i < this.Layers[z - 2].Nodes.length; ++i) {
 					const node = this.Layers[z - 2].Nodes[i];
@@ -419,8 +441,13 @@ class Network {
 				this.setInputs(example.inputs);
 				this.calculate();
 
+				// time data
+				let outputStart = 0;
+				if (timeLogFlag) {
+					outputStart = Date.now();
+				}
+
 				// back prop
-				const outputStart = Date.now();
 				let inputs = this.Layers[0].getNodeValsTransposed();
 				let hidden = this.Layers[
 					this.Layers.length - 2
@@ -435,21 +462,29 @@ class Network {
 				// ERROR = TARGETS - OUTPUTS
 				let output_errors = this.output_errors_kernel(targets, outputs);
 
+				// // Calculate gradient
+				// let gradients = this.gradients_kernel(outputs);
+				// let gradients_multiply = this.gradients_multply_kernel(
+				// 	gradients,
+				// 	output_errors
+				// );
+				// let gradients_multiply_learningRate = this.gradients_learningRate_kernel(
+				// 	gradients_multiply,
+				// 	this.learningRate
+				// );
+
 				// Calculate gradient
-				let gradients = this.gradients_kernel(outputs);
-				let gradients_multiply = this.gradients_multply_kernel(
-					gradients,
-					output_errors
-				);
-				let gradients_multiply_learningRate = this.gradients_learningRate_kernel(
-					gradients_multiply,
+				let gradients = this.gradient_kernels(
+					output_errors,
+					outputs,
 					this.learningRate
 				);
 
+				log('gradients', gradients);
 				// Calculate deltas
 				let hidden_T = this.hidden_T_kernel(hidden);
 				let weight_ho_deltas = this.weight_ho_deltas_kernel(
-					gradients_multiply_learningRate,
+					gradients,
 					hidden_T
 				);
 
@@ -465,19 +500,23 @@ class Network {
 					}
 				}
 				// Adjust the output bias by its deltas (which is just the gradients)
-				let biasGradients = gradients_multiply_learningRate
-					.toArray()
-					.map(i => i[0]);
+
+				// let biasGradients = gradients.toArray().map(i => i[0]);
+				let biasGradients = gradients.map(i => i[0]);
+				log('biasGradients', biasGradients);
 				outputBiasGradients.push(biasGradients);
 
-				outputSum += Date.now() - outputStart;
+				// time stats
+				let hiddenStart = 0;
+				if (timeLogFlag) {
+					outputSum += Date.now() - outputStart;
+					hiddenStart = Date.now();
+				}
 
 				// XXX HIDDEN LAYER XXX
 				let errors = output_errors;
 
 				const layerBiasGradients = [];
-
-				const hiddenStart = Date.now();
 				for (let z = this.Layers.length; z > 2; --z) {
 					hidden = this.Layers[z - 2].getNodeValsTransposed();
 					inputs = this.Layers[z - 3].getNodeValsTransposed();
@@ -520,11 +559,15 @@ class Network {
 
 				exampleHiddenBiasGradients.push(layerBiasGradients);
 
-				hiddenSum += Date.now() - hiddenStart;
+				// time stats
+				if (timeLogFlag) {
+					hiddenSum += Date.now() - hiddenStart;
+				}
 
-				// log('chunk:', chunk);
-				memLog();
+				// memLog('chunk: ' + chunk + '\nmemory usage:');
 			}
+
+			// time stats
 			if (timeLogFlag) {
 				console.timeEnd('calculate');
 
@@ -537,7 +580,8 @@ class Network {
 				console.time('adjust');
 			}
 
-			memLog();
+			memLog('chunk: ' + chunk + '\nmemory usage:');
+			// memLog();
 
 			for (
 				let i = 0;
@@ -736,245 +780,6 @@ class Network {
 		return output;
 	}
 
-	trainGPU(data, chunkSize, round, rounds, timeLogFlag, logFlag) {
-		const log = (...s) => {
-			logFlag ? console.log(...s) : '';
-		};
-		const table = (s, x) => {
-			if (logFlag) {
-				console.log(s);
-				console.table(x);
-			}
-		};
-
-		const chunks = Math.floor(data.length / chunkSize);
-
-		for (let chunk = 0; chunk < chunks; ++chunk) {
-			if (timeLogFlag) {
-				console.time('chunk');
-			}
-
-			const examples = [];
-
-			for (let i = 0; i < chunkSize; ++i) {
-				// log('i + chunk * chunkSize', i + chunk * chunkSize);
-				examples.push(data[i + chunk * chunkSize]);
-			}
-
-			// if (examples[0]) {
-			// if (false) {
-			const exampleHiddenDeltas = [];
-			const outputDeltas = [];
-
-			const exampleHiddenBiasGradients = [];
-			const outputBiasGradients = [];
-
-			for (const example of examples) {
-				this.setInputs(example.inputs);
-				this.calculate();
-
-				// let nodes = this.inspect();
-				// for (const node of nodes) {
-				// 	log(node);
-				// }
-				// log('\n\n');
-
-				// back prop
-				let inputs = Matrix.fromArray(example.inputs);
-				let hidden = Matrix.fromArray(
-					this.Layers[this.Layers.length - 2].getNodeVals()
-				);
-
-				let outputs = Matrix.fromArray(this.getOutputs());
-				let targets = Matrix.fromArray(example.outputs);
-
-				// calculate the error
-				// ERROR = TARGETS - OUTPUTS
-				let output_errors = Matrix.subtract(targets, outputs);
-
-				// Calculate gradient
-				let gradients = Matrix.map(outputs, sigmoidPrime);
-				gradients.multiply(output_errors);
-				gradients.multiply(this.learningRate);
-
-				// Calculate deltas
-				let hidden_T = Matrix.transpose(hidden);
-				let weight_ho_deltas = Matrix.gpuMultiplyKernel(
-					gradients,
-					hidden_T,
-					this.weight_ho_deltas_kernel
-				);
-
-				// Adjust the weights by deltas
-				let exampleOutputDeltas = [];
-				for (
-					let i = 0;
-					i < this.Layers[this.Layers.length - 1].Nodes.length;
-					++i
-				) {
-					const node = this.Layers[this.Layers.length - 1].Nodes[i];
-
-					const nodeDeltas = [];
-					for (let j = 0; j < node.Connections.length; ++j) {
-						nodeDeltas.push(weight_ho_deltas.data[i][j]);
-					}
-					exampleOutputDeltas.push(nodeDeltas);
-				}
-				outputDeltas.push(exampleOutputDeltas);
-
-				// Adjust the output bias by its deltas (which is just the gradients)
-				outputBiasGradients.push(gradients.toArray());
-
-				// XXX HIDDEN LAYER XXX
-				let errors = output_errors;
-
-				const layerDeltas = [];
-				const layerBiasGradients = [];
-
-				for (let z = this.Layers.length; z > 2; --z) {
-					hidden = Matrix.fromArray(this.Layers[z - 2].getNodeVals());
-					inputs = Matrix.fromArray(this.Layers[z - 3].getNodeVals());
-					//  create weights matrix
-					const weights = new Matrix(
-						this.Layers[z - 1].Nodes.length,
-						this.Layers[z - 2].Nodes.length
-					);
-
-					// populate weights matrix
-					for (let i = 0; i < this.Layers[z - 1].Nodes.length; ++i) {
-						const node = this.Layers[z - 1].Nodes[i];
-
-						for (let j = 0; j < node.Connections.length; ++j) {
-							const connection = node.Connections[j];
-
-							// set values in weight matrix's data array to the corresponding connection's weight
-							weights.data[i][j] = connection.weight;
-						}
-					}
-
-					// Calculate the hidden layer errors
-					let w_t = Matrix.transpose(weights);
-					let hidden_errors = Matrix.gpuMultiplyKernel(
-						w_t,
-						errors,
-						this.hidden_errors_kernels[z]
-					);
-					errors = hidden_errors;
-
-					// Calculate hidden gradient
-					let hidden_gradient = Matrix.map(hidden, sigmoidPrime);
-					hidden_gradient.multiply(errors);
-					hidden_gradient.multiply(this.learningRate);
-
-					// Calculate hidden deltas
-					let i_T = Matrix.transpose(inputs);
-					let weight_deltas = Matrix.gpuMultiplyKernel(
-						hidden_gradient,
-						i_T,
-						this.weight_deltas_kernels[z]
-					);
-					// log('a: hidden_gradient', hidden_gradient);
-					// log('b: i_T', i_T);
-					// log('weight_deltas', hidden_errors);
-
-					const nodeDeltas = [];
-					for (let i = 0; i < this.Layers[z - 2].Nodes.length; ++i) {
-						const node = this.Layers[z - 2].Nodes[i];
-
-						const weightDeltas = [];
-						for (let j = 0; j < node.Connections.length; ++j) {
-							weightDeltas.push(weight_deltas.data[i][j]);
-						}
-						nodeDeltas.push(weightDeltas);
-					}
-					layerDeltas[z - 2] = nodeDeltas;
-
-					// Adjust the hidden bias by its deltas (which is just the hidden gradients)
-					layerBiasGradients[z - 2] = hidden_gradient.toArray();
-					// log('\n\n');
-				}
-				exampleHiddenDeltas.push(layerDeltas);
-
-				exampleHiddenBiasGradients.push(layerBiasGradients);
-
-				// log('\n\n');
-				// nodes = this.inspect();
-				// for (const node of nodes) {
-				// 	log(node);
-				// }
-				log('\n\n');
-				log('\n\n');
-				log('\n\n');
-			}
-
-			for (
-				let i = 0;
-				i < this.Layers[this.Layers.length - 1].Nodes.length;
-				++i
-			) {
-				const node = this.Layers[this.Layers.length - 1].Nodes[i];
-
-				let biasSum = 0;
-				for (let k = 0; k < chunkSize; ++k) {
-					biasSum += outputBiasGradients[k][i];
-				}
-				node.bias += biasSum / chunkSize;
-
-				for (let j = 0; j < node.Connections.length; ++j) {
-					const connection = node.Connections[j];
-
-					let sum = 0;
-
-					for (let k = 0; k < chunkSize; ++k) {
-						sum += Number(outputDeltas[k][i][j]);
-					}
-
-					connection.weight += sum / chunkSize;
-				}
-			}
-
-			for (let z = this.Layers.length; z > 2; --z) {
-				for (let i = 0; i < this.Layers[z - 2].Nodes.length; ++i) {
-					const node = this.Layers[z - 2].Nodes[i];
-
-					let biasSum = 0;
-					for (let k = 0; k < chunkSize; ++k) {
-						biasSum += Number(exampleHiddenBiasGradients[k][z - 2][i]);
-					}
-					node.bias += biasSum / chunkSize;
-
-					for (let j = 0; j < node.Connections.length; ++j) {
-						const connection = node.Connections[j];
-
-						let sum = 0;
-
-						for (let k = 0; k < chunkSize; ++k) {
-							sum += Number(exampleHiddenDeltas[k][z - 2][i][j]);
-						}
-
-						connection.weight += sum / chunkSize;
-					}
-				}
-			}
-
-			if (timeLogFlag) {
-				console.log(`round: ${round + 1}\tchunk: ${chunk + 1} / ${chunks}`);
-				console.timeEnd('chunk');
-			}
-
-			// log('\n\n');
-			// let nodesOutside = this.inspect();
-			// for (const node of nodesOutside) {
-			// 	log(node);
-			// }
-			// log('\n\n');
-			// log('\n\n');
-			// log('\n\n');
-			// log('\n\n');
-			// }
-		}
-	}
-
 	train(data, chunkSize, round, rounds, timeLogFlag, logFlag) {
 		const log = (...s) => {
 			logFlag ? console.log(...s) : '';
@@ -1067,7 +872,7 @@ class Network {
 				outputDeltas.push(exampleOutputDeltas);
 
 				// Adjust the output bias by its deltas (which is just the gradients)
-				// console.log('gradients', gradients.toArray());
+				log('gradients', gradients.toArray());
 				outputBiasGradients.push(gradients.toArray());
 
 				// log('\n');
@@ -1149,7 +954,7 @@ class Network {
 				// for (const node of nodes) {
 				// 	log(node);
 				// }
-				// log('\n\n');
+				log('\n\n');
 			}
 			if (timeLogFlag) {
 				console.timeEnd('calculate');

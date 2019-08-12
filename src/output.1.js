@@ -48,7 +48,7 @@ for (
 // for (let i = 0; i < 1; ++i) {
 for (let i = 0; i < 30; ++i) {
 	// network.train(shuffle(trainingData), 10, i, 1, true, false);
-	network.trainGPU2({
+	network.trainGPU({
 		data: shuffle(trainingData),
 		chunkSize: 6000,
 		round: i,
