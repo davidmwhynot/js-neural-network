@@ -1,4 +1,3 @@
-# __**THIS IS BROKEN. HELP WANTED**__
 # JS Neural Network
 
 Run:
@@ -6,7 +5,7 @@ Run:
 node index.js
 ```
 
-`src/Network/index.js` is where `train()` function is located.
+`src/Network/index.js` is where the `train()` and `trainGPU()` functions are located.
 
 # example usage
 ```js
@@ -54,6 +53,8 @@ const trainingData = [
 ];
 
 // train the network
+network.train(trainingData);
+// use optimized  the network
 network.train(trainingData);
 
 // test the results of training
