@@ -11,6 +11,7 @@
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
+		"@tensorflow/tfjs-node-gpu": "^1.2.7",
 		"chalk": "^2.4.2",
 		"csvtojson": "^2.0.10",
 		"express": "^4.17.1",
