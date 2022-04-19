@@ -8,38 +8,137 @@ function transactions(j) {
 		const json = await csv({
 			noheader: true,
 			headers: ['time', 'price', 'amount']
-		}).fromFile('data/' + j + '-bitstamp.csv');
+		}).fromFile('data/33-bitstamp.csv');
+		// }).fromFile('data/bitstampUSD.csv');
 
-		const output = [];
-		let inputs = 0;
-		let outputs = 0;
-		let segment = {
-			inputs: [],
-			outputs: []
-		};
+		console.log('data loaded... length', json.length);
 
-		for (let i = 0; i < json.length; ++i) {
-			if (inputs < 900) {
-				// generate inputs
-				segment.inputs.push(Number(json[i].price));
-				++inputs;
-			} else if (outputs < 100) {
-				// generate outputs
-				segment.outputs.push(Number(json[i].price));
-				++outputs;
-			} else {
-				// reset
-				output.push(segment);
-				inputs = 0;
-				outputs = 0;
-				segment = {
-					inputs: [],
-					outputs: []
-				};
+		let x = 0;
+		let inputs = [];
+		let outputs = [];
+
+		// for (let i = 0; i < 33000; ++i) {
+		for (let i = 0; i < 1000; ++i) {
+			for (let j = 0; j < 999; ++j) {
+				inputs.push(Number(json[x].price));
+				++x;
 			}
+
+			outputs.push(Number(json[x].price));
+			++x;
+		}
+
+		console.log('inputs/outputs fetched');
+
+		console.log('inputs', inputs);
+		console.log('outputs', outputs);
+
+		// normalize data
+		// let inputsMin = Math.min(...inputs);
+		let inputsMin = inputs.reduce(function(a, b) {
+			return Math.min(a, b);
+		});
+		log('inputsMin', inputsMin);
+		// let inputsMax = Math.max(...inputs);
+		let inputsMax = inputs.reduce(function(a, b) {
+			return Math.max(a, b);
+		});
+		log('inputsMax', inputsMax);
+
+		// let outputsMin = Math.min(...outputs);
+		let outputsMin = outputs.reduce(function(a, b) {
+			return Math.min(a, b);
+		});
+		log('outputsMin', outputsMin);
+		// let outputsMax = Math.max(...outputs);
+		let outputsMax = outputs.reduce(function(a, b) {
+			return Math.max(a, b);
+		});
+		log('outputsMax', outputsMax);
+
+		let inputsMaxMinusMin = inputsMax - inputsMin;
+		log('inputsMaxMinusMin', inputsMaxMinusMin);
+		let outputsMaxMinusMin = outputsMax - outputsMin;
+		log('outputsMaxMinusMin', outputsMaxMinusMin);
+
+		for (let i = 0; i < inputs.length - 1; ++i) {
+			inputs[i] = (inputs[i] - inputsMin) / inputsMaxMinusMin;
+		}
+
+		for (let i = 0; i < outputs.length - 1; ++i) {
+			outputs[i] = (outputs[i] - outputsMin) / outputsMaxMinusMin;
+		}
+
+		console.log('inputs/outputs normalized');
+
+		console.log('generating data');
+		const output = [];
+		x = 0;
+		// for (let i = 0; i < (j.length - (j.length % 1000)) / 1000; ++i) {
+		// for (let i = 0; i < 33000; ++i) {
+		for (let i = 0; i < 999; ++i) {
+			let segment = {
+				inputs: [],
+				outputs: []
+			};
+
+			for (let j = 0; j < 999; ++j) {
+				segment.inputs.push(inputs[x]);
+				++x;
+			}
+
+			// for (let j = 0; j < 100; ++j) {
+			segment.outputs.push(outputs[i]);
+			++x;
+			// }
+
+			output.push(segment);
+
+			// const usage = process.memoryUsage();
+			// console.log('rss: ' + (usage.rss / 1000000 / 8192) * 100 + '%');
+			// console.log(
+			// 	'heapTotal: ' + (usage.heapTotal / 1000000 / 8192) * 100 + '%'
+			// );
+			// console.log('heapUsed: ' + (usage.heapUsed / 1000000 / 8192) * 100 + '%');
+			// console.log('external: ' + (usage.external / 1000000 / 8192) * 100 + '%');
+			// console.log('\n\n');
 		}
 
 		resolve(output);
+
+		/*
+
+
+
+		*/
+		// const json = await csv({
+		// 	noheader: true,
+		// 	headers: ['time', 'price', 'amount']
+		// }).fromFile('data/' + j + '-bitstamp.csv');
+
+		// const output = [];
+		// let x = 0;
+		// // for (let i = 0; i < (j.length - (j.length % 1000)) / 1000 - 1; ++i) {
+		// for (let i = 0; i < 1000; ++i) {
+		// 	let segment = {
+		// 		inputs: [],
+		// 		outputs: []
+		// 	};
+
+		// 	for (let j = 0; j < 999; ++j) {
+		// 		segment.inputs.push(Number(json[x].price));
+		// 		++x;
+		// 	}
+
+		// 	// for (let j = 0; j < 100; ++j) {
+		// 	segment.outputs.push(Number(json[x].price));
+		// 	++x;
+		// 	// }
+
+		// 	output.push(segment);
+		// }
+
+		// resolve(output);
 	});
 }
 
@@ -143,19 +242,29 @@ async function runTransactions() {
 		const segmentOutput = await transactions(i + 1);
 		output.push(...segmentOutput);
 		console.log('i', i);
+
+		const usage = process.memoryUsage();
+		console.log('rss: ' + usage.rss / 1000000 + 'MB');
+		console.log('heapTotal: ' + usage.heapTotal / 1000000 + 'MB');
+		console.log('heapUsed: ' + usage.heapUsed / 1000000 + 'MB');
+		console.log('external: ' + usage.external / 1000000 + 'MB');
 		console.log('\n\n');
 	}
 
-	for(const data of output) {
-		console.log('inputs');
-		console.log(data.inputs);
-		
-		console.log('outputs');
-		console.log(data.outputs);
-		console.log('');
-	}
+	// for (const data of output) {
+	// 	console.log('inputs');
+	// 	console.log(data.inputs);
 
-	writeFileSync('data/transactions.json', JSON.stringify(output), 'utf8');
+	// 	console.log('outputs');
+	// 	console.log(data.outputs);
+	// 	console.log('');
+	// }
+
+	writeFileSync('data/transactions-all.json', JSON.stringify(output), 'utf8');
 }
 
 runTransactions();
+
+function log(...s) {
+	console.log(...s);
+}

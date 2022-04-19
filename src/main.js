@@ -12,7 +12,7 @@ const test = require('../test.json');
 const args = process.argv;
 console.log(args);
 
-const TRAINING_DATA_PERCENTAGE = 100;
+const TRAINING_DATA_PERCENTAGE = 10;
 
 const TRAINING_ROUNDS = 1;
 const TRAINING_CHUNK_SIZE = 6000;
@@ -237,7 +237,7 @@ module.exports = () => {
 
 	log('\n\n\n');
 
-	log('network.inspect:', network.inspect());
+	// log('network.inspect:', network.inspect());
 };
 
 // ! functions !

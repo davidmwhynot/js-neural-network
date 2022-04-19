@@ -1,0 +1,36 @@
+cd data
+
+sed -n '1,1000000p;1000000q' bitstampUSD.csv > 1-bitstamp.csv
+sed -n '1000001,2000000p;2000000q' bitstampUSD.csv > 2-bitstamp.csv
+sed -n '2000001,3000000p;3000000q' bitstampUSD.csv > 3-bitstamp.csv
+sed -n '3000001,4000000p;4000000q' bitstampUSD.csv > 4-bitstamp.csv
+sed -n '4000001,5000000p;5000000q' bitstampUSD.csv > 5-bitstamp.csv
+sed -n '5000001,6000000p;6000000q' bitstampUSD.csv > 6-bitstamp.csv
+sed -n '6000001,7000000p;7000000q' bitstampUSD.csv > 7-bitstamp.csv
+sed -n '7000001,8000000p;8000000q' bitstampUSD.csv > 8-bitstamp.csv
+sed -n '8000001,9000000p;9000000q' bitstampUSD.csv > 9-bitstamp.csv
+sed -n '9000001,10000000p;10000000q' bitstampUSD.csv > 10-bitstamp.csv
+sed -n '10000001,11000000p;11000000q' bitstampUSD.csv > 11-bitstamp.csv
+sed -n '11000001,12000000p;12000000q' bitstampUSD.csv > 12-bitstamp.csv
+sed -n '12000001,13000000p;13000000q' bitstampUSD.csv > 13-bitstamp.csv
+sed -n '13000001,14000000p;14000000q' bitstampUSD.csv > 14-bitstamp.csv
+sed -n '14000001,15000000p;15000000q' bitstampUSD.csv > 15-bitstamp.csv
+sed -n '15000001,16000000p;16000000q' bitstampUSD.csv > 16-bitstamp.csv
+sed -n '16000001,17000000p;17000000q' bitstampUSD.csv > 17-bitstamp.csv
+sed -n '17000001,18000000p;18000000q' bitstampUSD.csv > 18-bitstamp.csv
+sed -n '18000001,19000000p;19000000q' bitstampUSD.csv > 19-bitstamp.csv
+sed -n '19000001,20000000p;20000000q' bitstampUSD.csv > 20-bitstamp.csv
+sed -n '20000001,21000000p;21000000q' bitstampUSD.csv > 21-bitstamp.csv
+sed -n '21000001,22000000p;22000000q' bitstampUSD.csv > 22-bitstamp.csv
+sed -n '22000001,23000000p;23000000q' bitstampUSD.csv > 23-bitstamp.csv
+sed -n '23000001,24000000p;24000000q' bitstampUSD.csv > 24-bitstamp.csv
+sed -n '24000001,25000000p;25000000q' bitstampUSD.csv > 25-bitstamp.csv
+sed -n '25000001,26000000p;26000000q' bitstampUSD.csv > 26-bitstamp.csv
+sed -n '26000001,27000000p;27000000q' bitstampUSD.csv > 27-bitstamp.csv
+sed -n '27000001,28000000p;28000000q' bitstampUSD.csv > 28-bitstamp.csv
+sed -n '28000001,29000000p;29000000q' bitstampUSD.csv > 29-bitstamp.csv
+sed -n '29000001,30000000p;30000000q' bitstampUSD.csv > 30-bitstamp.csv
+sed -n '30000001,31000000p;31000000q' bitstampUSD.csv > 31-bitstamp.csv
+sed -n '31000001,32000000p;32000000q' bitstampUSD.csv > 32-bitstamp.csv
+sed -n '32000001,33000000p;33000000q' bitstampUSD.csv > 33-bitstamp.csv
+sed -n '33000001,33595878p;33595878q' bitstampUSD.csv > 34-bitstamp.csv
